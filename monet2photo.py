@@ -25,7 +25,8 @@ class Monet2PhotoDataset(Dataset):
         self.split = split
 
         self.x_paths = list(Path(data_dir).glob(f"""{split}A/*.jpg"""))
-    
+        self.y_paths = list(Path(data_dir).glob(f"""{split}B/*.jpg"""))
+
     def transform(self, x, y):
         if self.split == "train":
             if random.random() > 0.5:
@@ -45,10 +46,10 @@ class Monet2PhotoDataset(Dataset):
 
     def __getitem__(self, idx):
         x_path = self.x_paths[idx]
-        y_path = str(x_path).replace(f"/{self.split}A/", f"/{self.split}B/")
-        y_path = y_path.replace("_A.jpg", "_B.jpg")
-
         x = Image.open(x_path).convert("RGB")
+
+        y_path = self.y_paths[idx]
         y = Image.open(y_path).convert("RGB")
-        x, y = self.transform(x, y)
+
+        x, y = self.transform(x=x, y=y)
         return x, y
