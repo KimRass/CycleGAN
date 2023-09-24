@@ -243,11 +243,11 @@ if __name__ == "__main__":
         )
         save_image(
             grid_xy,
-            path=f"{PARENT_DIR}/samples/{args.dataset}_xy_epoch_{epoch}.jpg",
+            path=f"{PARENT_DIR}/samples/{args.ds_name}_xy_epoch_{epoch}.jpg",
         )
         save_image(
             grid_yx,
-            path=f"{PARENT_DIR}/samples/{args.dataset}_yx_epoch_{epoch}.jpg",
+            path=f"{PARENT_DIR}/samples/{args.ds_name}_yx_epoch_{epoch}.jpg",
         )
         gen_x.train()
         gen_y.train()
