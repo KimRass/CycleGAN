@@ -142,7 +142,7 @@ if __name__ == "__main__":
         accum_disc_x_loss = 0
         accum_gen_x_loss = 0
         accum_gen_y_loss = 0
-        for step, (real_x, real_y) in enumerate(tqdm(train_dl), start=1):
+        for step, (real_x, real_y) in enumerate(train_dl, start=1):
             real_x = real_x.to(config.DEVICE)
             real_y = real_y.to(config.DEVICE)
 
