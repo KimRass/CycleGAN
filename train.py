@@ -116,7 +116,7 @@ if __name__ == "__main__":
     args = get_args()
 
     train_dl, test_dl = get_dl(
-        ds_name=args.ds_name, batch_size=args.batch_size, n_workers=args.n_workers,
+        ds_name=args.ds_name, batch_size=args.train_batch_size, n_workers=args.n_workers,
     )
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
@@ -145,12 +145,12 @@ if __name__ == "__main__":
             with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 real_y_pred = disc_y(real_y)
                 real_disc_y_gan_loss = gan_crit(
-                    real_y_pred, torch.ones(size=(args.batch_size, 1), device=real_y_pred.device),
+                    real_y_pred, torch.ones(size=(args.train_batch_size, 1), device=real_y_pred.device),
                 )
                 fake_y = gen_x(real_x)
                 fake_y_pred = disc_y(fake_y)
                 fake_disc_y_gan_loss = gan_crit(
-                    fake_y_pred, torch.zeros(size=(args.batch_size, 1), device=real_y_pred.device),
+                    fake_y_pred, torch.zeros(size=(args.train_batch_size, 1), device=real_y_pred.device),
                 )
                 # "We divide the objective by 2 while optimizing D, which slows down the rate at
                 # which D learns, relative to the rate of G."
@@ -165,12 +165,12 @@ if __name__ == "__main__":
             with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 real_x_pred = disc_x(real_x)
                 real_disc_x_gan_loss = gan_crit(
-                    real_x_pred, torch.ones(size=(args.batch_size, 1), device=real_x_pred.device),
+                    real_x_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
                 )
                 fake_x = gen_y(real_y)
                 fake_x_pred = disc_x(fake_x)
                 fake_disc_x_gan_loss = gan_crit(
-                    fake_x_pred, torch.zeros(size=(args.batch_size, 1), device=real_x_pred.device),
+                    fake_x_pred, torch.zeros(size=(args.train_batch_size, 1), device=real_x_pred.device),
                 )
                 disc_x_loss = (real_disc_x_gan_loss + fake_disc_x_gan_loss) / 2
             disc_x_optim.zero_grad()
@@ -184,7 +184,7 @@ if __name__ == "__main__":
                 fake_y = gen_x(real_x)
                 fake_y_pred = disc_y(fake_y)
                 real_gen_x_gan_loss = gan_crit(
-                    fake_y_pred, torch.ones(size=(args.batch_size, 1), device=real_x_pred.device),
+                    fake_y_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
                 )
                 fake_x = gen_y(fake_y)
                 x_cycle_loss = cycle_crit(fake_x, real_x)
@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 fake_x = gen_y(real_y)
                 fake_x_pred = disc_y(fake_x)
                 real_gen_y_gan_loss = gan_crit(
-                    fake_x_pred, torch.ones(size=(args.batch_size, 1), device=real_x_pred.device),
+                    fake_x_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
                 )
                 fake_y = gen_y(fake_x)
                 y_cycle_loss = cycle_crit(fake_y, real_y)
