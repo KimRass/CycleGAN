@@ -122,6 +122,7 @@ if __name__ == "__main__":
         test_batch_size=args.test_batch_size,
         n_workers=args.n_workers,
     )
+    test_di = iter(test_dl)
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
@@ -228,7 +229,7 @@ if __name__ == "__main__":
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
         with torch.no_grad():
             # for real_x, real_y in tqdm(test_dl):
-            real_x, real_y = test_dl[random.randrange(len(test_dl))]
+            real_x, real_y = next(test_di)
             fake_y = gen_x(real_x).detach().cpu()
             fake_x = gen_y(real_y).detach().cpu()
         grid_xy = images_to_grid(
