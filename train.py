@@ -222,7 +222,7 @@ if __name__ == "__main__":
         print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx loss: {accum_gen_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]")
 
         gen_x.eval()
         gen_y.eval()
