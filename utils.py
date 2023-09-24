@@ -45,8 +45,10 @@ def images_to_grid(x, y, x_mean, x_std, y_mean, y_std):
     x = denorm(x, mean=x_mean, std=x_std)
     y = denorm(y, mean=y_mean, std=y_std)
 
-    concat = torch.cat([x, y], dim=0)
-    gen_image = rearrange(concat, pattern="(n m) c h w -> (m n) c h w", n=3)
+    images = [x, y]
+    gen_image = rearrange(
+        torch.cat(images, dim=0), pattern="(n m) c h w -> (m n) c h w", n=len(images),
+    )
     grid = _batched_image_to_grid(gen_image, n_cols=3)
     return grid
 
