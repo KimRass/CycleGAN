@@ -224,14 +224,17 @@ if __name__ == "__main__":
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]")
 
+        _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
+
+        real_x, real_y = next(test_di)
+        real_x = real_x.to(config.DEVICE)
+        real_y = real_y.to(config.DEVICE)
+
         gen_x.eval()
         gen_y.eval()
-        _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
         with torch.no_grad():
-            # for real_x, real_y in tqdm(test_dl):
-            real_x, real_y = next(test_di)
-            real_x = real_x.to(config.DEVICE)
-            real_y = real_y.to(config.DEVICE)
+            fake_y = gen_x(real_x)
+            fake_x = gen_y(real_y)
         grid_xy = images_to_grid(
             x=real_x, y=fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
         )
