@@ -42,10 +42,10 @@ def select_ds(ds_name):
     return ds, x_mean, x_std, y_mean, y_std
 
 
-def get_dl(ds_name, train_batch_size, test_batch_size, n_workers):
+def get_dl(ds_name, data_dir, train_batch_size, test_batch_size, n_workers):
     ds, x_mean, x_std, y_mean, y_std = select_ds(ds_name)
     train_ds = ds(
-        data_dir=args.data_dir,
+        data_dir=data_dir,
         x_mean=x_mean,
         x_std=x_std,
         y_mean=y_mean,
@@ -53,7 +53,7 @@ def get_dl(ds_name, train_batch_size, test_batch_size, n_workers):
         split="train",
     )
     test_ds = ds(
-        data_dir=args.data_dir,
+        data_dir=data_dir,
         x_mean=x_mean,
         x_std=x_std,
         y_mean=y_mean,
@@ -116,7 +116,11 @@ if __name__ == "__main__":
     args = get_args()
 
     train_dl, test_dl = get_dl(
-        ds_name=args.ds_name, batch_size=args.train_batch_size, n_workers=args.n_workers,
+        ds_name=args.ds_name,
+        data_dir=args.data_dir,
+        train_batch_size=args.train_batch_size,
+        test_batch_size=args.test_batch_size,
+        n_workers=args.n_workers,
     )
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
