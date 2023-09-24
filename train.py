@@ -122,7 +122,6 @@ if __name__ == "__main__":
         test_batch_size=args.test_batch_size,
         n_workers=args.n_workers,
     )
-    test_di = iter(test_dl)
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
@@ -136,6 +135,7 @@ if __name__ == "__main__":
     cycle_crit = nn.L1Loss()
 
     ### Train.
+    test_di = iter(test_dl)
     init_epoch = 0
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
         accum_disc_y_loss = 0
@@ -226,7 +226,12 @@ if __name__ == "__main__":
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
-        real_x, real_y = next(test_di)
+        try:
+            real_x, real_y = next(test_di)
+        except StopIteration:
+            test_di = iter(test_dl)
+            real_x, real_y = next(test_di)
+            
         real_x = real_x.to(config.DEVICE)
         real_y = real_y.to(config.DEVICE)
 
