@@ -24,7 +24,7 @@ def _batched_image_to_grid(image, n_cols):
     b, _, h, w = image.shape
     assert b % n_cols == 0,\
         "The batch size should be a multiple of `n_cols` argument"
-    pad = max(2, int(max(h, w) * 0.04))
+    pad = max(2, int(max(h, w) * 0.02))
     grid = make_grid(tensor=image, nrow=n_cols, normalize=False, padding=pad)
     grid = grid.clone().permute((1, 2, 0)).detach().cpu().numpy()
 
