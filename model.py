@@ -154,7 +154,6 @@ class Discriminator(nn.Module):
         x = self.conv_block3(x)
         x = self.conv_block4(x)
         x = self.conv_block5(x)
-        x = torch.sigmoid(x)
         x = x.mean(dim=(2, 3))
         return x
 

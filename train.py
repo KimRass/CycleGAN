@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     scaler = GradScaler()
 
-    gan_crit = nn.BCELoss()
+    gan_crit = nn.BCEWithLogitsLoss()
     cycle_crit = nn.L1Loss()
 
     ### Train.
