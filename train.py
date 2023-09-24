@@ -230,8 +230,8 @@ if __name__ == "__main__":
         with torch.no_grad():
             # for real_x, real_y in tqdm(test_dl):
             real_x, real_y = next(test_di)
-            fake_y = gen_x(real_x).detach().cpu()
-            fake_x = gen_y(real_y).detach().cpu()
+            real_x = real_x.to(config.DEVICE)
+            real_y = real_y.to(config.DEVICE)
         grid_xy = images_to_grid(
             x=real_x, y=fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
         )
