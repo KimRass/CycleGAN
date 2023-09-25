@@ -248,8 +248,8 @@ if __name__ == "__main__":
         grid_yx = images_to_grid(
             x=test_real_y, y=test_fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
         )
-        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_xy_epoch_{epoch}.jpg")
-        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_yx_epoch_{epoch}.jpg")
+        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_forward_epoch_{epoch}.jpg")
+        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_backward_epoch_{epoch}.jpg")
         gen_x.train(), gen_y.train()
 
         cycle_loss = (accum_forward_cycle_loss + accum_backward_cycle_loss) / len(train_dl)

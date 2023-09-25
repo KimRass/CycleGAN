@@ -37,14 +37,14 @@ class ResidualBlock(nn.Module):
     def __init__(self, channels=256, padding=1):
         super().__init__()
 
-        # self.conv1 = nn.Conv2d(
-        #     channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
-        # )
-        # self.conv2 = nn.Conv2d(
-        #     channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
-        # )
-        self.conv1 = ConvNormRelu(channels, channels, kernel_size=3, stride=1, padding=padding)
-        self.conv2 = ConvNormRelu(channels, channels, kernel_size=3, stride=1, padding=padding)
+        self.conv1 = nn.Conv2d(
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
+        )
+        self.conv2 = nn.Conv2d(
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
+        )
+        # self.conv1 = ConvNormRelu(channels, channels, kernel_size=3, stride=1, padding=padding)
+        # self.conv2 = ConvNormRelu(channels, channels, kernel_size=3, stride=1, padding=padding)
 
     def forward(self, x):
         return x + self.conv2(self.conv1(x))
@@ -70,7 +70,13 @@ class TransConvNormRelu(nn.Module):
         x = torch.relu(x)
         return x
 
+
 # "Weights are initialized from a Gaussian distribution $N(0, 0.02).$"
+def _init_weights(model):
+    for m in model.modules():
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.InstanceNorm2d)):
+            m.weight.data.normal_(0, 0.02)
+
 
 # "This network contains three convolutions, several residual blocks, two fractionally-strided
 # convolutions with stride $\frac{1}{2}$, and one convolution that maps features to RGB. We
@@ -94,6 +100,8 @@ class Generator(nn.Module):
             128, 64, padding=1, output_padding=1,
         ) # "'u64'"
         self.conv_block4 = ConvNormRelu(64, 3, kernel_size=7, stride=1, padding=3) # "'c7s1-3'"
+
+        _init_weights(self)
 
     def forward(self, x):
         x = self.conv_block1(x)
@@ -146,7 +154,7 @@ class Discriminator(nn.Module):
         # "After the last layer, we apply a convolution to produce a 1-dimensional output."
         self.conv_block5 = nn.Conv2d(512, 1, kernel_size=1)
 
-        # _init_weights(self)
+        _init_weights(self)
 
     def forward(self, x):
         x = self.conv_block1(x)
