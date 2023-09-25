@@ -151,14 +151,9 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit):
 #     torch.save(ckpt, str(save_path))
 
 
-def save_gens(gen_x, gen_y, cycle_loss, save_path):
+def save_gen(gen, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    ckpt = {
-        "Gx": gen_x.state_dict(),
-        "Gy": gen_y.state_dict(),
-        "cycle_loss": cycle_loss,
-    }
-    torch.save(ckpt, str(save_path))
+    torch.save(gen.state_dict(), str(save_path))
 
 
 if __name__ == "__main__":
@@ -193,7 +188,8 @@ if __name__ == "__main__":
     test_real_x = test_real_x.to(config.DEVICE)
     test_real_y = test_real_y.to(config.DEVICE)
 
-    prev_ckpt_path = ".pth"
+    prev_gen_x_ckpt_path = ".pth"
+    prev_gen_y_ckpt_path = ".pth"
     init_epoch = 0
     best_loss = math.inf
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
@@ -239,7 +235,8 @@ if __name__ == "__main__":
                 cycle_crit=cycle_crit,
             )
 
-            gen_loss = gen_x_loss + gen_y_loss + config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
+            gen_loss = gen_x_loss + gen_y_loss
+            gen_loss += config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
             gen_x_optim.zero_grad()
             gen_y_optim.zero_grad()
             scaler.scale(gen_loss).backward()
@@ -278,12 +275,12 @@ if __name__ == "__main__":
         save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_backward_epoch_{epoch}.jpg")
         gen_x.train(), gen_y.train()
 
-        cycle_loss = (accum_forward_cycle_loss + accum_backward_cycle_loss) / len(train_dl)
-        if cycle_loss < best_loss:
-            cur_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_epoch_{epoch}.pth"
-            save_gens(gen_x=gen_x, gen_y=gen_y, cycle_loss=cycle_loss, save_path=cur_ckpt_path)
-            Path(prev_ckpt_path).unlink(missing_ok=True)
-            print(f"Saved checkpoint.")
+        cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gx_epoch_{epoch}.pth",
+        save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
+        Path(prev_gen_x_ckpt_path).unlink(missing_ok=True)
+        prev_gen_x_ckpt_path = cur_gen_x_ckpt_path
 
-            best_loss = cycle_loss
-            prev_ckpt_path = cur_ckpt_path
+        cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gy_epoch_{epoch}.pth",
+        save_gen(gen=gen_y, save_path=cur_gen_y_ckpt_path)
+        Path(prev_gen_y_ckpt_path).unlink(missing_ok=True)
+        prev_gen_y_ckpt_path = cur_gen_y_ckpt_path
