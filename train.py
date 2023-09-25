@@ -6,7 +6,7 @@ from torch.cuda.amp import GradScaler
 from pathlib import Path
 import argparse
 from tqdm import tqdm
-import random
+import math
 
 import config
 from model import Generator, Discriminator
@@ -100,15 +100,25 @@ def get_optims(disc_x, disc_y, gen_x, gen_y, disc_lr, gen_lr):
     return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
 
 
-def save_checkpoint(epoch, disc, gen, disc_optim, gen_optim, loss, save_path):
+# def save_checkpoint(epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, loss, save_path):
+#     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+#     ckpt = {
+#         "epoch": epoch,
+#         "G": gen.state_dict(),
+#         "D": disc.state_dict(),
+#         "D_optimizer": disc_optim.state_dict(),
+#         "G_optimizer": gen_optim.state_dict(),
+#         "loss": loss,
+#     }
+#     torch.save(ckpt, str(save_path))
+
+
+def save_gens(gen_x, gen_y, cycle_loss, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     ckpt = {
-        "epoch": epoch,
-        "G": gen.state_dict(),
-        "D": disc.state_dict(),
-        "D_optimizer": disc_optim.state_dict(),
-        "G_optimizer": gen_optim.state_dict(),
-        "loss": loss,
+        "Gx": gen_x.state_dict(),
+        "Gy": gen_y.state_dict(),
+        "cycle_loss": cycle_loss,
     }
     torch.save(ckpt, str(save_path))
 
@@ -140,11 +150,14 @@ if __name__ == "__main__":
     ### Train.
     test_di = iter(test_dl)
     init_epoch = 0
+    best_loss = math.inf
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
         accum_disc_y_loss = 0
         accum_disc_x_loss = 0
         accum_gen_x_loss = 0
         accum_gen_y_loss = 0
+        accum_x_cycle_loss = 0
+        accum_y_cycle_loss = 0
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
             real_x = real_x.to(config.DEVICE)
             real_y = real_y.to(config.DEVICE)
@@ -201,7 +214,8 @@ if __name__ == "__main__":
             scaler.scale(gen_x_loss).backward()
             scaler.step(gen_x_optim)
 
-            accum_gen_x_loss += gen_x_loss.item()
+            accum_gen_x_loss += real_gen_x_gan_loss.item()
+            accum_x_cycle_loss += x_cycle_loss.item()
 
             ### Train Gy.
             with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
@@ -217,7 +231,8 @@ if __name__ == "__main__":
             scaler.scale(gen_y_loss).backward()
             scaler.step(gen_y_optim)
 
-            accum_gen_y_loss += gen_y_loss.item()
+            accum_gen_y_loss += real_gen_y_gan_loss.item()
+            accum_x_cycle_loss += y_cycle_loss.item()
 
             scaler.update()
 
@@ -225,7 +240,9 @@ if __name__ == "__main__":
         print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx loss: {accum_gen_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]")
+        print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ x cycle loss: {accum_x_cycle_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ y cycle loss: {accum_y_cycle_loss / len(train_dl):.3f} ]")
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
@@ -259,3 +276,13 @@ if __name__ == "__main__":
         )
         gen_x.train()
         gen_y.train()
+
+        cycle_loss = (accum_x_cycle_loss + accum_y_cycle_loss) / len(train_dl)
+        if cycle_loss < best_loss:
+            cur_ckpt_path = f"{PARENT_DIR}/pretrained/{args.dataset}_epoch_{epoch}.pth"
+            save_gens(gen_x=gen_x, gen_y=gen_y, cycle_loss=cycle_loss, save_path=cur_ckpt_path)
+            Path(prev_ckpt_path).unlink(missing_ok=True)
+            print(f"Saved checkpoint.")
+
+            best_loss = cycle_loss
+            prev_ckpt_path = cur_ckpt_path
