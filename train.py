@@ -151,8 +151,11 @@ if __name__ == "__main__":
     REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
     FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
 
+    test_real_x, test_real_y = next(iter(test_dl))
+    test_real_x = test_real_x.to(config.DEVICE)
+    test_real_y = test_real_y.to(config.DEVICE)
+
     prev_ckpt_path = ".pth"
-    test_di = iter(test_dl)
     init_epoch = 0
     best_loss = math.inf
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
@@ -235,24 +238,15 @@ if __name__ == "__main__":
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
         ### Generate samples.
-        try:
-            real_x, real_y = next(test_di)
-        except StopIteration:
-            test_di = iter(test_dl)
-            real_x, real_y = next(test_di)
-            
-        real_x = real_x.to(config.DEVICE)
-        real_y = real_y.to(config.DEVICE)
-
         gen_x.eval(), gen_y.eval()
         with torch.no_grad():
-            fake_y = gen_x(real_x)
-            fake_x = gen_y(real_y)
+            test_fake_y = gen_x(test_real_x)
+            test_fake_x = gen_y(test_real_y)
         grid_xy = images_to_grid(
-            x=real_x, y=fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
+            x=test_real_x, y=test_fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
         )
         grid_yx = images_to_grid(
-            x=real_y, y=fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
+            x=test_real_y, y=test_fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
         )
         save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_xy_epoch_{epoch}.jpg")
         save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_yx_epoch_{epoch}.jpg")
