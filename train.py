@@ -279,7 +279,7 @@ if __name__ == "__main__":
 
         cycle_loss = (accum_x_cycle_loss + accum_y_cycle_loss) / len(train_dl)
         if cycle_loss < best_loss:
-            cur_ckpt_path = f"{PARENT_DIR}/pretrained/{args.dataset}_epoch_{epoch}.pth"
+            cur_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_epoch_{epoch}.pth"
             save_gens(gen_x=gen_x, gen_y=gen_y, cycle_loss=cycle_loss, save_path=cur_ckpt_path)
             Path(prev_ckpt_path).unlink(missing_ok=True)
             print(f"Saved checkpoint.")
