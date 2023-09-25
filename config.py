@@ -13,6 +13,4 @@ DEVICE = get_device()
 LAMB = 10 # "We set $\lambda = 10$."
 
 ### Optimizer
-# "We train our networks from scratch, with a learning rate of 0.0002."
-LR = 0.0002
 # "We keep the same learning rate for the first 100 epochs and linearly decay the rate to zero over the next 100 epochs."
