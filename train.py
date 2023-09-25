@@ -148,6 +148,10 @@ if __name__ == "__main__":
     cycle_crit = nn.L1Loss()
 
     ### Train.
+    REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
+    FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
+
+    prev_ckpt_path = ".pth"
     test_di = iter(test_dl)
     init_epoch = 0
     best_loss = math.inf
@@ -156,96 +160,81 @@ if __name__ == "__main__":
         accum_disc_x_loss = 0
         accum_gen_x_loss = 0
         accum_gen_y_loss = 0
-        accum_x_cycle_loss = 0
-        accum_y_cycle_loss = 0
+        accum_forward_cycle_loss = 0
+        accum_backward_cycle_loss = 0
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
             real_x = real_x.to(config.DEVICE)
             real_y = real_y.to(config.DEVICE)
 
-            ### Train Dy.
+            ### Train Dx and Dy.
             with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 real_y_pred = disc_y(real_y)
-                real_disc_y_gan_loss = gan_crit(
-                    real_y_pred, torch.ones(size=(args.train_batch_size, 1), device=real_y_pred.device),
-                )
+                real_disc_y_loss = gan_crit(real_y_pred, REAL_GT)
                 fake_y = gen_x(real_x)
                 fake_y_pred = disc_y(fake_y)
-                fake_disc_y_gan_loss = gan_crit(
-                    fake_y_pred, torch.zeros(size=(args.train_batch_size, 1), device=real_y_pred.device),
-                )
+                fake_disc_y_loss = gan_crit(fake_y_pred, FAKE_GT)
                 # "We divide the objective by 2 while optimizing D, which slows down the rate at
                 # which D learns, relative to the rate of G."
-                disc_y_loss = (real_disc_y_gan_loss + fake_disc_y_gan_loss) / 2
-            disc_y_optim.zero_grad()
-            scaler.scale(disc_y_loss).backward()
-            scaler.step(disc_y_optim)
+                disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
 
-            accum_disc_y_loss += disc_y_loss.item()
-
-            ### Train Dx.
-            with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 real_x_pred = disc_x(real_x)
-                real_disc_x_gan_loss = gan_crit(
-                    real_x_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
-                )
+                real_disc_x_loss = gan_crit(real_x_pred, REAL_GT)
                 fake_x = gen_y(real_y)
                 fake_x_pred = disc_x(fake_x)
-                fake_disc_x_gan_loss = gan_crit(
-                    fake_x_pred, torch.zeros(size=(args.train_batch_size, 1), device=real_x_pred.device),
-                )
-                disc_x_loss = (real_disc_x_gan_loss + fake_disc_x_gan_loss) / 2
+                fake_disc_x_loss = gan_crit(fake_x_pred, FAKE_GT)
+                disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
+
+                disc_loss = disc_x_loss + disc_y_loss
             disc_x_optim.zero_grad()
-            scaler.scale(disc_x_loss).backward()
+            disc_y_optim.zero_grad()
+            scaler.scale(disc_loss).backward()
             scaler.step(disc_x_optim)
+            scaler.step(disc_y_optim)
 
             accum_disc_x_loss += disc_x_loss.item()
+            accum_disc_y_loss += disc_y_loss.item()
 
-            ### Train Gx.
+            ### Train Gx and Gy.
             with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 fake_y = gen_x(real_x)
                 fake_y_pred = disc_y(fake_y)
-                real_gen_x_gan_loss = gan_crit(
-                    fake_y_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
-                )
-                fake_x = gen_y(fake_y)
-                x_cycle_loss = cycle_crit(fake_x, real_x)
-                gen_x_loss = real_gen_x_gan_loss + config.LAMB * x_cycle_loss
-            gen_x_optim.zero_grad()
-            scaler.scale(gen_x_loss).backward()
-            scaler.step(gen_x_optim)
+                gen_x_loss = gan_crit(fake_y_pred, REAL_GT)
 
-            accum_gen_x_loss += real_gen_x_gan_loss.item()
-            accum_x_cycle_loss += x_cycle_loss.item()
-
-            ### Train Gy.
-            with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
                 fake_x = gen_y(real_y)
-                fake_x_pred = disc_y(fake_x)
-                real_gen_y_gan_loss = gan_crit(
-                    fake_x_pred, torch.ones(size=(args.train_batch_size, 1), device=real_x_pred.device),
-                )
-                fake_y = gen_y(fake_x)
-                y_cycle_loss = cycle_crit(fake_y, real_y)
-                gen_y_loss = real_gen_y_gan_loss + config.LAMB * y_cycle_loss
+                fake_x_pred = disc_x(fake_x)
+                gen_y_loss = gan_crit(fake_x_pred, REAL_GT)
+
+                fake_x = gen_y(fake_y) # G → F
+                forward_cycle_loss = cycle_crit(fake_x, real_x)
+
+                fake_y = gen_y(fake_x) # G → F
+                backward_cycle_loss = cycle_crit(fake_y, real_y)
+
+                gen_loss = gen_x_loss + gen_y_loss + config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
+            gen_x_optim.zero_grad()
             gen_y_optim.zero_grad()
-            scaler.scale(gen_y_loss).backward()
+            scaler.scale(gen_loss).backward()
+            scaler.step(gen_x_optim)
             scaler.step(gen_y_optim)
 
-            accum_gen_y_loss += real_gen_y_gan_loss.item()
-            accum_x_cycle_loss += y_cycle_loss.item()
-
             scaler.update()
+
+            accum_gen_x_loss += gen_x_loss.item()
+            accum_gen_y_loss += gen_y_loss.item()
+            accum_forward_cycle_loss += forward_cycle_loss.item()
+            accum_forward_cycle_loss += backward_cycle_loss.item()
 
         print(f"[ {epoch}/{args.n_epochs} ]", end="")
         print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx loss: {accum_gen_x_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ x cycle loss: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ x cycle loss: {accum_x_cycle_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ y cycle loss: {accum_y_cycle_loss / len(train_dl):.3f} ]")
+        print(f"[ y cycle loss: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
+        ### Generate samples.
         try:
             real_x, real_y = next(test_di)
         except StopIteration:
@@ -255,8 +244,7 @@ if __name__ == "__main__":
         real_x = real_x.to(config.DEVICE)
         real_y = real_y.to(config.DEVICE)
 
-        gen_x.eval()
-        gen_y.eval()
+        gen_x.eval(), gen_y.eval()
         with torch.no_grad():
             fake_y = gen_x(real_x)
             fake_x = gen_y(real_y)
@@ -266,18 +254,11 @@ if __name__ == "__main__":
         grid_yx = images_to_grid(
             x=real_y, y=fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
         )
-        save_image(
-            grid_xy,
-            path=f"{PARENT_DIR}/samples/{args.ds_name}_xy_epoch_{epoch}.jpg",
-        )
-        save_image(
-            grid_yx,
-            path=f"{PARENT_DIR}/samples/{args.ds_name}_yx_epoch_{epoch}.jpg",
-        )
-        gen_x.train()
-        gen_y.train()
+        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_xy_epoch_{epoch}.jpg")
+        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_yx_epoch_{epoch}.jpg")
+        gen_x.train(), gen_y.train()
 
-        cycle_loss = (accum_x_cycle_loss + accum_y_cycle_loss) / len(train_dl)
+        cycle_loss = (accum_forward_cycle_loss + accum_backward_cycle_loss) / len(train_dl)
         if cycle_loss < best_loss:
             cur_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_epoch_{epoch}.pth"
             save_gens(gen_x=gen_x, gen_y=gen_y, cycle_loss=cycle_loss, save_path=cur_ckpt_path)
