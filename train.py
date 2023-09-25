@@ -21,14 +21,14 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     # "We keep the same learning rate for the first 100 epochs and linearly decay the rate
     # to zero over the next 100 epochs."
-    parser.add_argument("--n_epochs", type=int, required=False, default=200)
     # "We use the Adam solver with a batch size of 1."
-    parser.add_argument("--train_batch_size", type=int, required=False, default=1)
+    parser.add_argument("--n_workers", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
+    parser.add_argument("--n_epochs", type=int, required=False, default=200)
     # "We train our networks from scratch, with a learning rate of 0.0002."
     parser.add_argument("--disc_lr", type=float, required=False, default=0.0002)
     parser.add_argument("--gen_lr", type=float, required=False, default=0.0002)
-    parser.add_argument("--n_workers", type=int, required=True)
+    parser.add_argument("--train_batch_size", type=int, required=False, default=1)
     parser.add_argument("--resume_from", type=str, required=False)
 
     args = parser.parse_args()
@@ -98,6 +98,44 @@ def get_optims(disc_x, disc_y, gen_x, gen_y, disc_lr, gen_lr):
     gen_x_optim = Adam(params=gen_x.parameters(), lr=gen_lr)
     gen_y_optim = Adam(params=gen_y.parameters(), lr=gen_lr)
     return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
+
+
+def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_gt, fake_gt, gan_crit):
+    with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
+        real_y_pred = disc_y(real_y)
+        real_disc_y_loss = gan_crit(real_y_pred, real_gt)
+        fake_y = gen_x(real_x)
+        fake_y_pred = disc_y(fake_y)
+        fake_disc_y_loss = gan_crit(fake_y_pred, fake_gt)
+        # "We divide the objective by 2 while optimizing D, which slows down the rate at
+        # which D learns, relative to the rate of G."
+        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
+
+        real_x_pred = disc_x(real_x)
+        real_disc_x_loss = gan_crit(real_x_pred, real_gt)
+        fake_x = gen_y(real_y)
+        fake_x_pred = disc_x(fake_x)
+        fake_disc_x_loss = gan_crit(fake_x_pred, fake_gt)
+        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
+    return disc_x_loss, disc_y_loss
+
+
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit):
+    with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
+        fake_y = gen_x(real_x)
+        fake_y_pred = disc_y(fake_y)
+        gen_x_loss = gan_crit(fake_y_pred, real_gt)
+
+        fake_x = gen_y(real_y)
+        fake_x_pred = disc_x(fake_x)
+        gen_y_loss = gan_crit(fake_x_pred, real_gt)
+
+        fake_x = gen_y(fake_y) # G → F
+        forward_cycle_loss = cycle_crit(fake_x, real_x)
+
+        fake_y = gen_y(fake_x) # G → F
+        backward_cycle_loss = cycle_crit(fake_y, real_y)
+    return gen_x_loss, gen_y_loss, forward_cycle_loss, backward_cycle_loss
 
 
 # def save_checkpoint(epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, loss, save_path):
@@ -170,24 +208,17 @@ if __name__ == "__main__":
             real_y = real_y.to(config.DEVICE)
 
             ### Train Dx and Dy.
-            with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-                real_y_pred = disc_y(real_y)
-                real_disc_y_loss = gan_crit(real_y_pred, REAL_GT)
-                fake_y = gen_x(real_x)
-                fake_y_pred = disc_y(fake_y)
-                fake_disc_y_loss = gan_crit(fake_y_pred, FAKE_GT)
-                # "We divide the objective by 2 while optimizing D, which slows down the rate at
-                # which D learns, relative to the rate of G."
-                disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
+            disc_x_loss, disc_y_loss = get_disc_losses(
+                disc_x=disc_x,
+                disc_y=disc_y,
+                gen_x=gen_x,
+                gen_y=gen_y,
+                real_gt=REAL_GT,
+                fake_gt=FAKE_GT,
+                gan_crit=gan_crit,
+            )
 
-                real_x_pred = disc_x(real_x)
-                real_disc_x_loss = gan_crit(real_x_pred, REAL_GT)
-                fake_x = gen_y(real_y)
-                fake_x_pred = disc_x(fake_x)
-                fake_disc_x_loss = gan_crit(fake_x_pred, FAKE_GT)
-                disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
-
-                disc_loss = disc_x_loss + disc_y_loss
+            disc_loss = disc_x_loss + disc_y_loss
             disc_x_optim.zero_grad()
             disc_y_optim.zero_grad()
             scaler.scale(disc_loss).backward()
@@ -198,22 +229,17 @@ if __name__ == "__main__":
             accum_disc_y_loss += disc_y_loss.item()
 
             ### Train Gx and Gy.
-            with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-                fake_y = gen_x(real_x)
-                fake_y_pred = disc_y(fake_y)
-                gen_x_loss = gan_crit(fake_y_pred, REAL_GT)
+            gen_x_loss, gen_y_loss, forward_cycle_loss, backward_cycle_loss = get_gen_losses(
+                disc_x=disc_x,
+                disc_y=disc_y,
+                gen_x=gen_x,
+                gen_y=gen_y,
+                real_gt=REAL_GT,
+                gan_crit=gan_crit,
+                cycle_crit=cycle_crit,
+            )
 
-                fake_x = gen_y(real_y)
-                fake_x_pred = disc_x(fake_x)
-                gen_y_loss = gan_crit(fake_x_pred, REAL_GT)
-
-                fake_x = gen_y(fake_y) # G → F
-                forward_cycle_loss = cycle_crit(fake_x, real_x)
-
-                fake_y = gen_y(fake_x) # G → F
-                backward_cycle_loss = cycle_crit(fake_y, real_y)
-
-                gen_loss = gen_x_loss + gen_y_loss + config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
+            gen_loss = gen_x_loss + gen_y_loss + config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
             gen_x_optim.zero_grad()
             gen_y_optim.zero_grad()
             scaler.scale(gen_loss).backward()
