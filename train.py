@@ -225,15 +225,15 @@ if __name__ == "__main__":
             accum_gen_x_loss += gen_x_loss.item()
             accum_gen_y_loss += gen_y_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
-            accum_forward_cycle_loss += backward_cycle_loss.item()
+            accum_backward_cycle_loss += backward_cycle_loss.item()
 
         print(f"[ {epoch}/{args.n_epochs} ]", end="")
         print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx loss: {accum_gen_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ x cycle loss: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Forward cycle loss: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ y cycle loss: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
+        print(f"[ Backward cycle loss: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
