@@ -275,12 +275,12 @@ if __name__ == "__main__":
         save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_backward_epoch_{epoch}.jpg")
         gen_x.train(), gen_y.train()
 
-        cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gx_epoch_{epoch}.pth",
+        cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gx_epoch_{epoch}.pth"
         save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
         Path(prev_gen_x_ckpt_path).unlink(missing_ok=True)
         prev_gen_x_ckpt_path = cur_gen_x_ckpt_path
 
-        cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gy_epoch_{epoch}.pth",
+        cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gy_epoch_{epoch}.pth"
         save_gen(gen=gen_y, save_path=cur_gen_y_ckpt_path)
         Path(prev_gen_y_ckpt_path).unlink(missing_ok=True)
         prev_gen_y_ckpt_path = cur_gen_y_ckpt_path
