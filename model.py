@@ -154,7 +154,7 @@ class ConvBlock(nn.Module):
         if self.norm:
             x = self.norm(x)
         # "We use leaky ReLUs with a slope of 0.2."
-        x = F.leaky_relu(x, slope=0.2)
+        x = F.leaky_relu(x, negative_slope=0.2)
         return x
 
 
