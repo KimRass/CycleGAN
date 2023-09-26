@@ -251,6 +251,7 @@ if __name__ == "__main__":
                 real_gt=REAL_GT,
                 gan_crit=gan_crit,
                 cycle_crit=cycle_crit,
+                identity_crit=identity_crit,
             )
 
             gen_loss = gen_x_gan_loss + gen_y_gan_loss
