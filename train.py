@@ -125,8 +125,8 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, 
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = gan_crit(fake_x_pred, real_gt)
 
-        gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
-        gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
+        gen_x_identity_loss = identity_crit(gen_x(real_x), real_x)
+        gen_y_identity_loss = identity_crit(gen_y(real_y), real_y)
 
         fake_x = gen_y(fake_y) # G → F
         forward_cycle_loss = cycle_crit(fake_x, real_x)
