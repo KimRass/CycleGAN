@@ -11,7 +11,7 @@ import math
 import config
 from model import Generator, Discriminator
 from monet2photo import Monet2PhotoDataset
-from utils import images_to_grid, save_image
+from utils import update_lr, images_to_grid, save_image
 
 
 def get_args():
@@ -19,15 +19,11 @@ def get_args():
 
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
-    # "We keep the same learning rate for the first 100 epochs and linearly decay the rate
-    # to zero over the next 100 epochs."
     # "We use the Adam solver with a batch size of 1."
     parser.add_argument("--n_workers", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
-    parser.add_argument("--n_epochs", type=int, required=False, default=200)
     # "We train our networks from scratch, with a learning rate of 0.0002."
-    parser.add_argument("--disc_lr", type=float, required=False, default=0.0002)
-    parser.add_argument("--gen_lr", type=float, required=False, default=0.0002)
+    parser.add_argument("--lr", type=float, required=False, default=0.0002)
     parser.add_argument("--train_batch_size", type=int, required=False, default=1)
     parser.add_argument("--resume_from", type=str, required=False)
 
@@ -91,12 +87,12 @@ def get_models(device):
     return disc_x, disc_y, gen_x, gen_y
 
 
-def get_optims(disc_x, disc_y, gen_x, gen_y, disc_lr, gen_lr):
+def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     # "We use the Adam solver."
-    disc_x_optim = Adam(params=disc_x.parameters(), lr=disc_lr)
-    disc_y_optim = Adam(params=disc_y.parameters(), lr=disc_lr)
-    gen_x_optim = Adam(params=gen_x.parameters(), lr=gen_lr)
-    gen_y_optim = Adam(params=gen_y.parameters(), lr=gen_lr)
+    disc_x_optim = Adam(params=disc_x.parameters(), lr=lr)
+    disc_y_optim = Adam(params=disc_y.parameters(), lr=lr)
+    gen_x_optim = Adam(params=gen_x.parameters(), lr=lr)
+    gen_y_optim = Adam(params=gen_y.parameters(), lr=lr)
     return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
 
 
@@ -136,7 +132,7 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, 
         fake_x = gen_y(fake_y) # G → F
         forward_cycle_loss = cycle_crit(fake_x, real_x)
 
-        fake_y = gen_y(fake_x) # G → F
+        fake_y = gen_x(fake_x) # G → F
         backward_cycle_loss = cycle_crit(fake_y, real_y)
     return (
         gen_x_gan_loss,
@@ -146,6 +142,33 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, 
         forward_cycle_loss,
         backward_cycle_loss,
     )
+
+
+def _get_lr(epoch, max_lr, warmup_epochs, n_epochs):
+    # "We keep the same learning rate for the first 100 epochs and linearly decay the rate to zero
+    # over the next 100 epochs."
+    if epoch < warmup_epochs:
+        lr = max_lr
+    else:
+        lr = - max_lr / (n_epochs - warmup_epochs + 1) * (epoch - n_epochs - 1)
+    return lr
+
+
+def update_lrs(
+    disc_x_optim,
+    disc_y_optim,
+    gen_x_optim,
+    gen_y_optim,
+    epoch,
+    max_lr,
+    warmup_epochs,
+    n_epochs,
+):
+    lr = _get_lr(epoch=epoch, max_lr=max_lr, warmup_epochs=warmup_epochs, n_epochs=n_epochs)
+    disc_x_optim.param_groups[0]["lr"] = lr
+    disc_y_optim.param_groups[0]["lr"] = lr
+    gen_x_optim.param_groups[0]["lr"] = lr
+    gen_y_optim.param_groups[0]["lr"] = lr
 
 
 # def save_checkpoint(epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, loss, save_path):
@@ -182,7 +205,7 @@ if __name__ == "__main__":
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
     disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim = get_optims(
-        disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y, disc_lr=args.disc_lr, gen_lr=args.gen_lr,
+        disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y, lr=args.lr,
     )
 
     scaler = GradScaler()
@@ -203,7 +226,18 @@ if __name__ == "__main__":
     prev_gen_y_ckpt_path = ".pth"
     init_epoch = 0
     best_loss = math.inf
-    for epoch in range(init_epoch + 1, args.n_epochs + 1):
+    for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
+        update_lrs(
+            disc_x_optim=disc_x_optim,
+            disc_y_optim=disc_y_optim,
+            gen_x_optim=gen_x_optim,
+            gen_y_optim=gen_y_optim,
+            epoch=epoch,
+            max_lr=args.lr,
+            warmup_epochs=config.WARMUP_EPOCHS,
+            n_epochs=config.N_EPOCHS,
+        )
+
         accum_disc_y_loss = 0
         accum_disc_x_loss = 0
         accum_gen_x_gan_loss = 0
@@ -274,7 +308,7 @@ if __name__ == "__main__":
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
-        print(f"[ {epoch}/{args.n_epochs} ]", end="")
+        print(f"[ {epoch}/{config.N_EPOCHS} ]", end="")
         print(f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx identity: {accum_gen_x_identity_loss / len(train_dl):.3f} ]", end="")

@@ -11,6 +11,9 @@ PHOTO_STD = (0.5, 0.5, 0.5)
 ### Training
 DEVICE = get_device()
 LAMB = 10 # "We set $\lambda = 10$."
+# "We keep the same learning rate for the first 100 epochs and linearly decay the rate
+# to zero over the next 100 epochs."
+N_EPOCHS = 200
 
 ### Optimizer
-# "We keep the same learning rate for the first 100 epochs and linearly decay the rate to zero over the next 100 epochs."
+WARMUP_EPOCHS = 100
