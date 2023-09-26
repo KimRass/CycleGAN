@@ -1,5 +1,6 @@
 # References:
     # https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/networks.py
+    # https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/models.py
     # https://machinelearningmastery.com/how-to-implement-pix2pix-gan-models-from-scratch-with-keras/
 
 import torch
@@ -8,7 +9,7 @@ import torch.nn.functional as F
 
 
 class ConvNormRelu(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, activ):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, padding_mode, activ):
         super().__init__()
 
         self.activ = activ
@@ -19,7 +20,7 @@ class ConvNormRelu(nn.Module):
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
-            padding_mode="reflect",
+            padding_mode=padding_mode,
             bias=False,
         )
         self.norm = nn.InstanceNorm2d(out_channels, affine=False, track_running_stats=False)
@@ -31,6 +32,8 @@ class ConvNormRelu(nn.Module):
             x = torch.relu(x)
         elif self.activ == "tanh":
             x = torch.tanh(x)
+        elif self.activ == "none":
+            pass
         return x
 
 
@@ -38,17 +41,12 @@ class ResidualBlock(nn.Module):
     def __init__(self, channels=256, padding=1):
         super().__init__()
 
-        # self.conv1 = nn.Conv2d(
-        #     channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
-        # )
-        # self.conv2 = nn.Conv2d(
-        #     channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect",
-        # )
         self.conv1 = ConvNormRelu(
-            channels, channels, kernel_size=3, stride=1, padding=padding, activ="relu",
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="relu",
         )
         self.conv2 = ConvNormRelu(
-            channels, channels, kernel_size=3, stride=1, padding=padding, activ="relu",
+            # channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="zeros", activ="relu",
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="none",
         )
 
     def forward(self, x):
@@ -101,13 +99,13 @@ class Generator(nn.Module):
         super().__init__()
 
         self.conv_block1 = ConvNormRelu(
-            3, 64, kernel_size=7, stride=1, padding=3, activ="relu",
+            3, 64, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="relu",
         ) # "'c7s1-64'"
         self.conv_block2 = ConvNormRelu(
-            64, 128, kernel_size=3, stride=2, padding=1, activ="relu",
+            64, 128, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
         ) # "'d128'"
         self.conv_block3 = ConvNormRelu(
-            128, 256, kernel_size=3, stride=2, padding=1, activ="relu",
+            128, 256, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
         ) # "'d256'"
         self.resid_blocks = nn.Sequential(
             *[ResidualBlock() for _ in range(n_resid_blocks)]
@@ -121,7 +119,7 @@ class Generator(nn.Module):
         # 논문에는 나와있지 않지만, $[-1, 1]$의 tensor를 이미지로 변환할 것이므로 activation function으로 tanh를
         # 사용하겠습니다.
         self.conv_block4 = ConvNormRelu(
-            64, 3, kernel_size=7, stride=1, padding=3, activ="tanh",
+            64, 3, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="tanh",
         ) # "'c7s1-3'"
 
         _init_weights(self)
@@ -198,3 +196,12 @@ if __name__ == "__main__":
     
     out = gen(x)
     out.shape
+
+    # x = torch.randn(1, 1, 3, 4)
+    # pad = nn.ReflectionPad2d(2)
+    # conv1 = nn.Conv2d(1, 1, kernel_size=2)
+    # conv2 = nn.Conv2d(1, 1, kernel_size=2, padding=2, padding_mode="reflect")
+    # conv2.weight.data = conv1.weight.data
+    # conv2.bias.data = conv1.bias.data
+
+    # torch.equal(conv1(pad(x)), conv2(x))

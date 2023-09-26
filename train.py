@@ -120,22 +120,32 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_gt, fake_gt, gan_crit):
     return disc_x_loss, disc_y_loss
 
 
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit):
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, identity_crit):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
-        gen_x_loss = gan_crit(fake_y_pred, real_gt)
+        gen_x_gan_loss = gan_crit(fake_y_pred, real_gt)
 
         fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x)
-        gen_y_loss = gan_crit(fake_x_pred, real_gt)
+        gen_y_gan_loss = gan_crit(fake_x_pred, real_gt)
+
+        gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
+        gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
 
         fake_x = gen_y(fake_y) # G → F
         forward_cycle_loss = cycle_crit(fake_x, real_x)
 
         fake_y = gen_y(fake_x) # G → F
         backward_cycle_loss = cycle_crit(fake_y, real_y)
-    return gen_x_loss, gen_y_loss, forward_cycle_loss, backward_cycle_loss
+    return (
+        gen_x_gan_loss,
+        gen_y_gan_loss,
+        gen_x_identity_loss,
+        gen_y_identity_loss,
+        forward_cycle_loss,
+        backward_cycle_loss,
+    )
 
 
 # def save_checkpoint(epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, loss, save_path):
@@ -179,6 +189,7 @@ if __name__ == "__main__":
 
     gan_crit = nn.BCEWithLogitsLoss()
     cycle_crit = nn.L1Loss()
+    identity_crit = nn.L1Loss()
 
     ### Train.
     REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
@@ -195,8 +206,8 @@ if __name__ == "__main__":
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
         accum_disc_y_loss = 0
         accum_disc_x_loss = 0
-        accum_gen_x_loss = 0
-        accum_gen_y_loss = 0
+        accum_gen_x_gan_loss = 0
+        accum_gen_y_gan_loss = 0
         accum_forward_cycle_loss = 0
         accum_backward_cycle_loss = 0
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
@@ -225,7 +236,14 @@ if __name__ == "__main__":
             accum_disc_y_loss += disc_y_loss.item()
 
             ### Train Gx and Gy.
-            gen_x_loss, gen_y_loss, forward_cycle_loss, backward_cycle_loss = get_gen_losses(
+            (
+                gen_x_gan_loss,
+                gen_y_gan_loss,
+                gen_x_identity_loss,
+                gen_y_identity_loss,
+                forward_cycle_loss,
+                backward_cycle_loss,
+            ) = get_gen_losses(
                 disc_x=disc_x,
                 disc_y=disc_y,
                 gen_x=gen_x,
@@ -235,8 +253,9 @@ if __name__ == "__main__":
                 cycle_crit=cycle_crit,
             )
 
-            gen_loss = gen_x_loss + gen_y_loss
-            gen_loss += config.LAMB * forward_cycle_loss + config.LAMB * backward_cycle_loss
+            gen_loss = gen_x_gan_loss + gen_y_gan_loss
+            gen_loss += 0.5 * config.LAMB * (gen_x_identity_loss + gen_y_identity_loss)
+            gen_loss += config.LAMB * (forward_cycle_loss +  backward_cycle_loss)
             gen_x_optim.zero_grad()
             gen_y_optim.zero_grad()
             scaler.scale(gen_loss).backward()
@@ -245,17 +264,17 @@ if __name__ == "__main__":
 
             scaler.update()
 
-            accum_gen_x_loss += gen_x_loss.item()
-            accum_gen_y_loss += gen_y_loss.item()
+            accum_gen_x_gan_loss += gen_x_gan_loss.item()
+            accum_gen_y_gan_loss += gen_y_gan_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
         print(f"[ {epoch}/{args.n_epochs} ]", end="")
         print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx loss: {accum_gen_x_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx loss: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Forward cycle loss: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy loss: {accum_gen_y_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gy loss: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Backward cycle loss: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
