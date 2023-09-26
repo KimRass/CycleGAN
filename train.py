@@ -208,6 +208,8 @@ if __name__ == "__main__":
         accum_disc_x_loss = 0
         accum_gen_x_gan_loss = 0
         accum_gen_y_gan_loss = 0
+        accum_gen_x_identity_loss = 0
+        accum_gen_y_identity_loss = 0
         accum_forward_cycle_loss = 0
         accum_backward_cycle_loss = 0
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
@@ -267,16 +269,20 @@ if __name__ == "__main__":
 
             accum_gen_x_gan_loss += gen_x_gan_loss.item()
             accum_gen_y_gan_loss += gen_y_gan_loss.item()
+            accum_gen_x_identity_loss  += gen_x_identity_loss.item()
+            accum_gen_y_identity_loss  += gen_y_identity_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
         print(f"[ {epoch}/{args.n_epochs} ]", end="")
-        print(f"[ Dy loss: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx loss: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Forward cycle loss: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Dx loss: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy loss: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Backward cycle loss: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
+        print(f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx identity: {accum_gen_x_identity_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gy identity: {accum_gen_y_identity_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
