@@ -5,13 +5,12 @@ from torch.optim import Adam
 from torch.cuda.amp import GradScaler
 from pathlib import Path
 import argparse
-from tqdm import tqdm
 import math
 
 import config
 from model import Generator, Discriminator
 from monet2photo import Monet2PhotoDataset
-from utils import update_lr, images_to_grid, save_image
+from utils import images_to_grid, save_image
 
 
 def get_args():
@@ -175,8 +174,9 @@ def update_lrs(
 #     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
 #     ckpt = {
 #         "epoch": epoch,
-#         "G": gen.state_dict(),
-#         "D": disc.state_dict(),
+#         "Dx": disc_x.state_dict(),
+#         "Dx": disc_x.state_dict(),
+#         "Gx": gen_x.state_dict(),
 #         "D_optimizer": disc_optim.state_dict(),
 #         "G_optimizer": gen_optim.state_dict(),
 #         "loss": loss,
