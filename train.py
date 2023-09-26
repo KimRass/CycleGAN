@@ -321,20 +321,25 @@ if __name__ == "__main__":
         _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
 
         ### Generate samples.
-        gen_x.eval(), gen_y.eval()
+        gen_x.eval()
         with torch.no_grad():
             test_fake_y = gen_x(test_real_x)
-            test_fake_x = gen_y(test_real_y)
         grid_xy = images_to_grid(
             x=test_real_x, y=test_fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
         )
+        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_forward_epoch_{epoch}.jpg")
+        gen_x.train()
+
+        gen_y.eval()
+        with torch.no_grad():
+            test_fake_x = gen_y(test_real_y)
         grid_yx = images_to_grid(
             x=test_real_y, y=test_fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
         )
-        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_forward_epoch_{epoch}.jpg")
         save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_backward_epoch_{epoch}.jpg")
-        gen_x.train(), gen_y.train()
+        gen_y.train()
 
+        ### Save Gs.
         cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gx_epoch_{epoch}.pth"
         save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
         Path(prev_gen_x_ckpt_path).unlink(missing_ok=True)
