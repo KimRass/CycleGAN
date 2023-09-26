@@ -115,7 +115,7 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_gt, fake_gt, gan_crit):
     return disc_x_loss, disc_y_loss
 
 
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, identity_crit):
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, identity_crit, cycle_crit):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
@@ -125,14 +125,14 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, cycle_crit, 
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = gan_crit(fake_x_pred, real_gt)
 
-        gen_x_identity_loss = identity_crit(gen_x(real_x), real_x)
-        gen_y_identity_loss = identity_crit(gen_y(real_y), real_y)
+        gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
+        gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
 
-        fake_x = gen_y(fake_y) # G → F
-        forward_cycle_loss = cycle_crit(fake_x, real_x)
+        fake_fake_x = gen_y(fake_y) # G → F
+        forward_cycle_loss = cycle_crit(fake_fake_x, real_x)
 
-        fake_y = gen_x(fake_x) # G → F
-        backward_cycle_loss = cycle_crit(fake_y, real_y)
+        fake_fake_y = gen_x(fake_x) # G → F
+        backward_cycle_loss = cycle_crit(fake_fake_y, real_y)
     return (
         gen_x_gan_loss,
         gen_y_gan_loss,
@@ -286,8 +286,8 @@ if __name__ == "__main__":
                 gen_y=gen_y,
                 real_gt=REAL_GT,
                 gan_crit=gan_crit,
-                cycle_crit=cycle_crit,
                 identity_crit=identity_crit,
+                cycle_crit=cycle_crit,
             )
 
             gen_loss = gen_x_gan_loss + gen_y_gan_loss
