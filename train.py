@@ -346,7 +346,7 @@ if __name__ == "__main__":
         grid_xy = images_to_grid(
             x=test_real_x, y=test_fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
         )
-        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_forward_epoch_{epoch}.jpg")
+        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_forward.jpg")
         gen_x.train()
 
         gen_y.eval()
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         grid_yx = images_to_grid(
             x=test_real_y, y=test_fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
         )
-        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_backward_epoch_{epoch}.jpg")
+        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_backward.jpg")
         gen_y.train()
 
         ### Save Gs.
