@@ -43,8 +43,12 @@ class ResidualBlock(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv1 = ConvNormRelu(256, 256, kernel_size=3, padding=1, padding_mode="reflect", activ="relu")
-        self.conv2 = ConvNormRelu(256, 256, kernel_size=3, padding=1, padding_mode="reflect", activ="none")
+        self.conv1 = ConvNormRelu(
+            256, 256, kernel_size=3, stride=1, padding=1, padding_mode="reflect", activ="relu",
+        )
+        self.conv2 = ConvNormRelu(
+            256, 256, kernel_size=3, stride=1, padding=1, padding_mode="reflect", activ="none",
+        )
 
     def forward(self, x):
         return x + self.conv2(self.conv1(x))
@@ -91,7 +95,9 @@ class Generator(nn.Module):
         super().__init__()
 
         # "Let 'c7s1-k' denote a 7 × 7 Convolution-InstanceNorm-ReLU layer with k filters and stride 1."
-        self.conv_block1 = ConvNormRelu(3, 64, kernel_size=7, padding=3, padding_mode="reflect", activ="relu") # "'c7s1-64'"
+        self.conv_block1 = ConvNormRelu(
+            3, 64, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="relu",
+        ) # "'c7s1-64'"
         # "'dk' denotes a 3 × 3 Convolution-InstanceNorm-ReLU layer with k filters and stride 2. Reflection
         # padding was used to reduce artifacts."
         self.conv_block2 = ConvNormRelu(
