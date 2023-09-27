@@ -1,5 +1,6 @@
 # References:
     # https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/train
+    # https://daebaq27.tistory.com/111
 
 import torch
 import torch.nn as nn
