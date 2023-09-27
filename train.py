@@ -20,6 +20,7 @@ from utils import images_to_grid, save_image
 def get_args():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
     # "We use the Adam solver with a batch size of 1."
     parser.add_argument("--n_workers", type=int, required=True)
