@@ -92,14 +92,16 @@ def get_models(device):
 
 def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     # "We use the Adam solver."
-    disc_x_optim = Adam(params=disc_x.parameters(), lr=lr)
-    disc_y_optim = Adam(params=disc_y.parameters(), lr=lr)
+    # disc_x_optim = Adam(params=disc_x.parameters(), lr=lr)
+    # disc_y_optim = Adam(params=disc_y.parameters(), lr=lr)
+    disc_optim = Adam(params=list(disc_x.parameters()) + list(disc_y.parameters()), lr=lr)
     # gen_x_optim = Adam(params=gen_x.parameters(), lr=lr)
     # gen_y_optim = Adam(params=gen_y.parameters(), lr=lr)
     ### Gx와 Gy의 parameters를 묶어서 하나의 optimzer를 만듭니다!
     gen_optim = Adam(params=list(gen_x.parameters()) + list(gen_y.parameters()), lr=lr)
     # return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
-    return disc_x_optim, disc_y_optim, gen_optim
+    # return disc_x_optim, disc_y_optim, gen_optim
+    return disc_optim, gen_optim
 
 
 def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, gan_crit):
@@ -135,12 +137,12 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_cr
         gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
         gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
 
-        # fake_y = gen_x(real_x) # G → F
-        fake_fake_x = gen_y(fake_y) # F → G
+        # fake_y = gen_x(real_x)
+        fake_fake_x = gen_y(fake_y)
         forward_cycle_loss = cycle_crit(fake_fake_x, real_x)
 
-        # fake_x = gen_y(real_y) # F → G
-        fake_fake_y = gen_x(fake_x) # G → F
+        # fake_x = gen_y(real_y)
+        fake_fake_y = gen_x(fake_x)
         backward_cycle_loss = cycle_crit(fake_fake_y, real_y)
     return (
         gen_x_gan_loss,
@@ -163,8 +165,9 @@ def _get_lr(epoch, max_lr, warmup_epochs, n_epochs):
 
 
 def update_lrs(
-    disc_x_optim,
-    disc_y_optim,
+    # disc_x_optim,
+    # disc_y_optim,
+    disc_optim,
     # gen_x_optim,
     # gen_y_optim,
     gen_optim,
@@ -174,8 +177,9 @@ def update_lrs(
     n_epochs,
 ):
     lr = _get_lr(epoch=epoch, max_lr=max_lr, warmup_epochs=warmup_epochs, n_epochs=n_epochs)
-    disc_x_optim.param_groups[0]["lr"] = lr
-    disc_y_optim.param_groups[0]["lr"] = lr
+    # disc_x_optim.param_groups[0]["lr"] = lr
+    # disc_y_optim.param_groups[0]["lr"] = lr
+    disc_optim.param_groups[0]["lr"] = lr
     # gen_x_optim.param_groups[0]["lr"] = lr
     # gen_y_optim.param_groups[0]["lr"] = lr
     gen_optim.param_groups[0]["lr"] = lr
@@ -216,7 +220,8 @@ if __name__ == "__main__":
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
     # disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim = get_optims(
-    disc_x_optim, disc_y_optim, gen_optim = get_optims(
+    # disc_x_optim, disc_y_optim, gen_optim = get_optims(
+    disc_optim, gen_optim = get_optims(
         disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y, lr=args.lr,
     )
 
@@ -240,8 +245,9 @@ if __name__ == "__main__":
     best_loss = math.inf
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
-            disc_x_optim=disc_x_optim,
-            disc_y_optim=disc_y_optim,
+            # disc_x_optim=disc_x_optim,
+            # disc_y_optim=disc_y_optim,
+            disc_optim=disc_optim,
             # gen_x_optim=gen_x_optim,
             # gen_y_optim=gen_y_optim,
             gen_optim=gen_optim,
@@ -277,11 +283,13 @@ if __name__ == "__main__":
             )
             disc_loss = disc_x_loss + disc_y_loss
 
-            disc_x_optim.zero_grad()
-            disc_y_optim.zero_grad()
+            # disc_x_optim.zero_grad()
+            # disc_y_optim.zero_grad()
+            disc_optim.zero_grad()
             scaler.scale(disc_loss).backward()
-            scaler.step(disc_x_optim)
-            scaler.step(disc_y_optim)
+            # scaler.step(disc_x_optim)
+            # scaler.step(disc_y_optim)
+            scaler.step(disc_optim)
 
             accum_disc_x_loss += disc_x_loss.item()
             accum_disc_y_loss += disc_y_loss.item()
