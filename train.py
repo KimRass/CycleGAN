@@ -95,7 +95,7 @@ def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
 
 
-def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_gt, fake_gt, gan_crit):
+def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, gan_crit):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = gan_crit(real_y_pred, real_gt)
@@ -115,7 +115,7 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_gt, fake_gt, gan_crit):
     return disc_x_loss, disc_y_loss
 
 
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, identity_crit, cycle_crit):
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_crit, identity_crit, cycle_crit):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
@@ -128,9 +128,11 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_gt, gan_crit, identity_cri
         gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
         gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
 
-        fake_fake_x = gen_y(fake_y) # G → F
+        # fake_y = gen_x(real_x) # G → F
+        fake_fake_x = gen_y(fake_y) # F → G
         forward_cycle_loss = cycle_crit(fake_fake_x, real_x)
 
+        # fake_x = gen_y(real_y) # F → G
         fake_fake_y = gen_x(fake_x) # G → F
         backward_cycle_loss = cycle_crit(fake_fake_y, real_y)
     return (
@@ -256,6 +258,8 @@ if __name__ == "__main__":
                 disc_y=disc_y,
                 gen_x=gen_x,
                 gen_y=gen_y,
+                real_x=real_x,
+                real_y=real_y,
                 real_gt=REAL_GT,
                 fake_gt=FAKE_GT,
                 gan_crit=gan_crit,
@@ -284,6 +288,8 @@ if __name__ == "__main__":
                 disc_y=disc_y,
                 gen_x=gen_x,
                 gen_y=gen_y,
+                real_x=real_x,
+                real_y=real_y,
                 real_gt=REAL_GT,
                 gan_crit=gan_crit,
                 identity_crit=identity_crit,

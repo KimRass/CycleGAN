@@ -42,11 +42,12 @@ class ResidualBlock(nn.Module):
         super().__init__()
 
         self.conv1 = ConvNormRelu(
-            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="relu",
+            # channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="relu",
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="zeros", activ="relu",
         )
         self.conv2 = ConvNormRelu(
-            # channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="zeros", activ="relu",
-            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="none",
+            # channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="reflect", activ="none",
+            channels, channels, kernel_size=3, stride=1, padding=padding, padding_mode="zeros", activ="relu",
         )
 
     def forward(self, x):
@@ -85,11 +86,6 @@ def _init_weights(model):
 # "This network contains three convolutions, several residual blocks, two fractionally-strided
 # convolutions with stride $\frac{1}{2}$, and one convolution that maps features to RGB. We
 # use 6 blocks for 128 × 128 images and 9 blocks for 256 × 256 and higher-resolution training images."
-# "Let 'c7s1-k' denote a 7 × 7 Convolution-InstanceNorm-ReLU layer with k filters and stride 1.
-# 'dk' denotes a 3 × 3 Convolution-InstanceNorm-ReLU layer with k filters and stride 2. Reflection
-# padding was used to reduce artifacts. 'Rk' denotes a residual block that contains two 3 × 3
-# convolutional layers with the same number of filters on both layer. 'uk' denotes a 3 × 3
-# fractional-strided-Convolution-InstanceNorm-ReLU layer with k filters and stride $\frac{1}{2}$."
 # "The network with 6 residual blocks consists of: 'c7s1-64, d128, d256, R256, R256, R256, R256, R256,
 # R256, u128, u64, c7s1-3'."
 # "The network with 9 residual blocks consists of: 'c7s1-64, d128, d256, R256, R256, R256, R256, R256,
@@ -98,18 +94,28 @@ class Generator(nn.Module):
     def __init__(self, n_resid_blocks=9):
         super().__init__()
 
+        # "Let 'c7s1-k' denote a 7 × 7 Convolution-InstanceNorm-ReLU layer with k filters and stride 1."
         self.conv_block1 = ConvNormRelu(
-            3, 64, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="relu",
+            # 3, 64, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="relu",
+            3, 64, kernel_size=7, stride=1, padding=3, padding_mode="zeros", activ="relu",
         ) # "'c7s1-64'"
+        # "'dk' denotes a 3 × 3 Convolution-InstanceNorm-ReLU layer with k filters and stride 2. Reflection
+        # padding was used to reduce artifacts."
         self.conv_block2 = ConvNormRelu(
-            64, 128, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
+            # 64, 128, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
+            64, 128, kernel_size=3, stride=2, padding=1, padding_mode="reflect", activ="relu",
         ) # "'d128'"
         self.conv_block3 = ConvNormRelu(
-            128, 256, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
+            # 128, 256, kernel_size=3, stride=2, padding=1, padding_mode="zeros", activ="relu",
+            128, 256, kernel_size=3, stride=2, padding=1, padding_mode="reflect", activ="relu",
         ) # "'d256'"
+        # "'Rk' denotes a residual block that contains two 3 × 3 convolutional layers with the same number of
+        # filters on both layer."
         self.resid_blocks = nn.Sequential(
             *[ResidualBlock() for _ in range(n_resid_blocks)]
         ) # "'R256'"
+        # "'uk' denotes a 3 × 3 fractional-strided-Convolution-InstanceNorm-ReLU layer with k filters and
+        # stride $\frac{1}{2}$."
         self.trans_conv_block1 = TransConvNormRelu(
             256, 128, padding=1, output_padding=1,
         ) # "'u128'"
@@ -119,7 +125,8 @@ class Generator(nn.Module):
         # 논문에는 나와있지 않지만, $[-1, 1]$의 tensor를 이미지로 변환할 것이므로 activation function으로 tanh를
         # 사용하겠습니다.
         self.conv_block4 = ConvNormRelu(
-            64, 3, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="tanh",
+            # 64, 3, kernel_size=7, stride=1, padding=3, padding_mode="reflect", activ="tanh",
+            64, 3, kernel_size=7, stride=1, padding=3, padding_mode="zeros", activ="tanh",
         ) # "'c7s1-3'"
 
         _init_weights(self)
