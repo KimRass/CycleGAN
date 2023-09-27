@@ -1,3 +1,6 @@
+# References:
+    # https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/train
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -90,9 +93,12 @@ def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     # "We use the Adam solver."
     disc_x_optim = Adam(params=disc_x.parameters(), lr=lr)
     disc_y_optim = Adam(params=disc_y.parameters(), lr=lr)
-    gen_x_optim = Adam(params=gen_x.parameters(), lr=lr)
-    gen_y_optim = Adam(params=gen_y.parameters(), lr=lr)
-    return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
+    # gen_x_optim = Adam(params=gen_x.parameters(), lr=lr)
+    # gen_y_optim = Adam(params=gen_y.parameters(), lr=lr)
+    ### Gx와 Gy의 parameters를 묶어서 하나의 optimzer를 만듭니다!
+    gen_optim = Adam(params=list(gen_x.parameters()) + list(gen_y.parameters()), lr=lr)
+    # return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
+    return disc_x_optim, disc_y_optim, gen_optim
 
 
 def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, gan_crit):
@@ -158,8 +164,9 @@ def _get_lr(epoch, max_lr, warmup_epochs, n_epochs):
 def update_lrs(
     disc_x_optim,
     disc_y_optim,
-    gen_x_optim,
-    gen_y_optim,
+    # gen_x_optim,
+    # gen_y_optim,
+    gen_optim,
     epoch,
     max_lr,
     warmup_epochs,
@@ -168,8 +175,9 @@ def update_lrs(
     lr = _get_lr(epoch=epoch, max_lr=max_lr, warmup_epochs=warmup_epochs, n_epochs=n_epochs)
     disc_x_optim.param_groups[0]["lr"] = lr
     disc_y_optim.param_groups[0]["lr"] = lr
-    gen_x_optim.param_groups[0]["lr"] = lr
-    gen_y_optim.param_groups[0]["lr"] = lr
+    # gen_x_optim.param_groups[0]["lr"] = lr
+    # gen_y_optim.param_groups[0]["lr"] = lr
+    gen_optim.param_groups[0]["lr"] = lr
 
 
 # def save_checkpoint(epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, loss, save_path):
@@ -206,7 +214,8 @@ if __name__ == "__main__":
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
-    disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim = get_optims(
+    # disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim = get_optims(
+    disc_x_optim, disc_y_optim, gen_optim = get_optims(
         disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y, lr=args.lr,
     )
 
@@ -232,8 +241,9 @@ if __name__ == "__main__":
         update_lrs(
             disc_x_optim=disc_x_optim,
             disc_y_optim=disc_y_optim,
-            gen_x_optim=gen_x_optim,
-            gen_y_optim=gen_y_optim,
+            # gen_x_optim=gen_x_optim,
+            # gen_y_optim=gen_y_optim,
+            gen_optim=gen_optim,
             epoch=epoch,
             max_lr=args.lr,
             warmup_epochs=config.WARMUP_EPOCHS,
@@ -264,8 +274,8 @@ if __name__ == "__main__":
                 fake_gt=FAKE_GT,
                 gan_crit=gan_crit,
             )
-
             disc_loss = disc_x_loss + disc_y_loss
+
             disc_x_optim.zero_grad()
             disc_y_optim.zero_grad()
             scaler.scale(disc_loss).backward()
@@ -295,15 +305,17 @@ if __name__ == "__main__":
                 identity_crit=identity_crit,
                 cycle_crit=cycle_crit,
             )
-
             gen_loss = gen_x_gan_loss + gen_y_gan_loss
             gen_loss += 0.5 * config.LAMB * (gen_x_identity_loss + gen_y_identity_loss)
             gen_loss += config.LAMB * (forward_cycle_loss +  backward_cycle_loss)
-            gen_x_optim.zero_grad()
-            gen_y_optim.zero_grad()
+
+            # gen_x_optim.zero_grad()
+            # gen_y_optim.zero_grad()
+            gen_optim.zero_grad()
             scaler.scale(gen_loss).backward()
-            scaler.step(gen_x_optim)
-            scaler.step(gen_y_optim)
+            # scaler.step(gen_x_optim)
+            # scaler.step(gen_y_optim)
+            scaler.step(gen_optim)
 
             scaler.update()
 
