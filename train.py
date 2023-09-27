@@ -35,7 +35,6 @@ def get_args():
 
 
 def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
-    # ds, x_mean, x_std, y_mean, y_std = select_ds(ds_name)
     train_ds = CycleGANDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
@@ -200,7 +199,6 @@ if __name__ == "__main__":
     args = get_args()
 
     train_dl, test_dl = get_dl(
-        ds_name=args.ds_name,
         data_dir=args.data_dir,
         train_batch_size=args.train_batch_size,
         test_batch_size=args.test_batch_size,
