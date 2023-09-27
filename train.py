@@ -13,14 +13,13 @@ import math
 
 import config
 from model import Generator, Discriminator
-from monet2photo import Monet2PhotoDataset
+from dataset import CycleGANDataset
 from utils import images_to_grid, save_image
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
     # "We use the Adam solver with a batch size of 1."
     parser.add_argument("--n_workers", type=int, required=True)
@@ -34,32 +33,22 @@ def get_args():
     return args
 
 
-def select_ds(ds_name):
-    if ds_name == "monet2photo":
-        ds = Monet2PhotoDataset
-        x_mean = config.MONET_MEAN
-        x_std = config.MONET_STD
-        y_mean = config.PHOTO_MEAN
-        y_std = config.PHOTO_STD
-    return ds, x_mean, x_std, y_mean, y_std
-
-
-def get_dl(ds_name, data_dir, train_batch_size, test_batch_size, n_workers):
-    ds, x_mean, x_std, y_mean, y_std = select_ds(ds_name)
-    train_ds = ds(
+def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
+    # ds, x_mean, x_std, y_mean, y_std = select_ds(ds_name)
+    train_ds = CycleGANDataset(
         data_dir=data_dir,
-        x_mean=x_mean,
-        x_std=x_std,
-        y_mean=y_mean,
-        y_std=y_std,
+        x_mean=config.X_MEAN,
+        x_std=config.X_STD,
+        y_mean=config.Y_MEAN,
+        y_std=config.Y_STD,
         split="train",
     )
-    test_ds = ds(
+    test_ds = CycleGANDataset(
         data_dir=data_dir,
-        x_mean=x_mean,
-        x_std=x_std,
-        y_mean=y_mean,
-        y_std=y_std,
+        x_mean=config.X_MEAN,
+        x_std=config.X_STD,
+        y_mean=config.Y_MEAN,
+        y_std=config.Y_STD,
         split="test",
     )
 
@@ -345,14 +334,17 @@ if __name__ == "__main__":
         print(f"[ Gy identity: {accum_gen_y_identity_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
-        _, x_mean, x_std, y_mean, y_std = select_ds(args.ds_name)
-
         ### Generate samples.
         gen_x.eval()
         with torch.no_grad():
             test_fake_y = gen_x(test_real_x)
         grid_xy = images_to_grid(
-            x=test_real_x, y=test_fake_y, x_mean=x_mean, x_std=x_std, y_mean=y_mean, y_std=y_std,
+            x=test_real_x,
+            y=test_fake_y,
+            x_mean=config.X_MEAN,
+            x_std=config.X_STD,
+            y_mean=config.Y_MEAN,
+            y_std=config.Y_STD,
         )
         save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_forward.jpg")
         gen_x.train()
@@ -361,7 +353,12 @@ if __name__ == "__main__":
         with torch.no_grad():
             test_fake_x = gen_y(test_real_y)
         grid_yx = images_to_grid(
-            x=test_real_y, y=test_fake_x, x_mean=y_mean, x_std=y_std, y_mean=x_mean, y_std=x_std,
+            x=test_real_y,
+            y=test_fake_x,
+            x_mean=config.X_MEAN,
+            x_std=config.X_STD,
+            y_mean=config.Y_MEAN,
+            y_std=config.Y_STD,
         )
         save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_backward.jpg")
         gen_y.train()

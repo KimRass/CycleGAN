@@ -3,10 +3,10 @@ from utils import get_device
 ### Data
 ### Monet2Photo
 IMG_SIZE = 256
-MONET_MEAN = (0.5, 0.5, 0.5)
-MONET_STD = (0.5, 0.5, 0.5)
-PHOTO_MEAN = (0.5, 0.5, 0.5)
-PHOTO_STD = (0.5, 0.5, 0.5)
+X_MEAN = (0.5, 0.5, 0.5)
+X_STD = (0.5, 0.5, 0.5)
+Y_MEAN = (0.5, 0.5, 0.5)
+Y_STD = (0.5, 0.5, 0.5)
 
 ### Training
 DEVICE = get_device()

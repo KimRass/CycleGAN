@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 
 
-class Monet2PhotoDataset(Dataset):
+class CycleGANDataset(Dataset):
     def __init__(
         self,
         data_dir,
