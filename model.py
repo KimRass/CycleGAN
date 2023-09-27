@@ -115,7 +115,7 @@ class Generator(nn.Module):
         self.trans_conv_block2 = TransConvNormRelu(128, 64, padding=1) # "'u64'"
         # 논문에는 나와있지 않지만, $[-1, 1]$의 tensor를 이미지로 변환할 것이므로 activation function으로 tanh를
         # 사용하겠습니다.
-        self.conv_block4 = nn.Conv2d(64, 3, kernel_size=7, padding=3, padding_mode="relection") # "'c7s1-3'"
+        self.conv_block4 = nn.Conv2d(64, 3, kernel_size=7, padding=3, padding_mode="reflect") # "'c7s1-3'"
 
         _init_weights(self)
 
