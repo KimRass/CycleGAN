@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 
 
-class CycleGANDataset(Dataset):
+class UnpairedImageDataset(Dataset):
     def __init__(
         self,
         data_dir,
@@ -25,7 +25,10 @@ class CycleGANDataset(Dataset):
         self.split = split
 
         self.x_paths = list(Path(data_dir).glob(f"""{split}A/*.jpg"""))
+        self.x_len = len(self.x_paths)
+
         self.y_paths = list(Path(data_dir).glob(f"""{split}B/*.jpg"""))
+        self.y_len = len(self.y_paths)
 
     def transform(self, x, y):
         if self.split == "train":
@@ -42,14 +45,16 @@ class CycleGANDataset(Dataset):
         return x, y
 
     def __len__(self):
-        return len(self.x_paths)
+        return max(self.x_len, self.y_len)
 
     def __getitem__(self, idx):
-        x_path = self.x_paths[idx]
+        if self.x_len >= self.y_len:
+            x_path = self.x_paths[idx]
+            y_path = random.choice(self.y_paths)
+        else:
+            y_path = self.y_paths[idx]
+            x_path = random.choice(self.x_paths)
         x = Image.open(x_path).convert("RGB")
-
-        y_path = self.y_paths[idx]
         y = Image.open(y_path).convert("RGB")
-
         x, y = self.transform(x=x, y=y)
         return x, y

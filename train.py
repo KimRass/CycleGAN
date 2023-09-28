@@ -13,7 +13,7 @@ import math
 
 import config
 from model import Generator, Discriminator
-from dataset import CycleGANDataset
+from dataset import UnpairedImageDataset
 from utils import images_to_grid, save_image
 
 
@@ -35,7 +35,7 @@ def get_args():
 
 
 def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
-    train_ds = CycleGANDataset(
+    train_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
         x_std=config.X_STD,
@@ -43,7 +43,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
         y_std=config.Y_STD,
         split="train",
     )
-    test_ds = CycleGANDataset(
+    test_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
         x_std=config.X_STD,
