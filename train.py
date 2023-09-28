@@ -345,7 +345,7 @@ if __name__ == "__main__":
             y_mean=config.Y_MEAN,
             y_std=config.Y_STD,
         )
-        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_forward.jpg")
+        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_forward.jpg")
         gen_x.train()
 
         gen_y.eval()
@@ -359,16 +359,16 @@ if __name__ == "__main__":
             y_mean=config.Y_MEAN,
             y_std=config.Y_STD,
         )
-        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}_epoch_{epoch}_backward.jpg")
+        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_backward.jpg")
         gen_y.train()
 
         ### Save Gs.
-        cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gx_epoch_{epoch}.pth"
+        cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}/Gx_epoch_{epoch}.pth"
         save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
         Path(prev_gen_x_ckpt_path).unlink(missing_ok=True)
         prev_gen_x_ckpt_path = cur_gen_x_ckpt_path
 
-        cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}_Gy_epoch_{epoch}.pth"
+        cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}/Gy_epoch_{epoch}.pth"
         save_gen(gen=gen_y, save_path=cur_gen_y_ckpt_path)
         Path(prev_gen_y_ckpt_path).unlink(missing_ok=True)
         prev_gen_y_ckpt_path = cur_gen_y_ckpt_path
