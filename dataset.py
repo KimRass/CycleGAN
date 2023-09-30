@@ -10,8 +10,8 @@ class UnpairedImageDataset(Dataset):
     def __init__(
         self,
         data_dir,
-        mean,
-        std,
+        x_mean,
+        x_std,
         y_mean,
         y_std,
         split="train",
@@ -19,8 +19,8 @@ class UnpairedImageDataset(Dataset):
     ):
         super().__init__()
 
-        self.mean = mean
-        self.std = std
+        self.x_mean = x_mean
+        self.x_std = x_std
         self.y_mean = y_mean
         self.y_std = y_std
         self.split = split
@@ -40,7 +40,7 @@ class UnpairedImageDataset(Dataset):
                 y = TF.hflip(y)
 
         x = T.ToTensor()(x)
-        x = T.Normalize(mean=self.mean, std=self.std)(x)
+        x = T.Normalize(mean=self.x_mean, std=self.x_std)(x)
 
         y = T.ToTensor()(y)
         y = T.Normalize(mean=self.y_mean, std=self.y_std)(y)
