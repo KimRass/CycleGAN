@@ -10,11 +10,12 @@ from torch.cuda.amp import GradScaler
 from pathlib import Path
 import argparse
 import math
+from time import time
 
 import config
 from model import Generator, Discriminator
 from dataset import UnpairedImageDataset
-from utils import images_to_grid, save_image
+from utils import images_to_grid, save_image, get_elapsed_time
 
 
 def get_args():
@@ -42,6 +43,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
         y_mean=config.Y_MEAN,
         y_std=config.Y_STD,
         split="train",
+        fixed_pairs=config.FIXED_PAIRS,
     )
     test_ds = UnpairedImageDataset(
         data_dir=data_dir,
@@ -81,15 +83,8 @@ def get_models(device):
 
 def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     # "We use the Adam solver."
-    # disc_x_optim = Adam(params=disc_x.parameters(), lr=lr)
-    # disc_y_optim = Adam(params=disc_y.parameters(), lr=lr)
     disc_optim = Adam(params=list(disc_x.parameters()) + list(disc_y.parameters()), lr=lr)
-    # gen_x_optim = Adam(params=gen_x.parameters(), lr=lr)
-    # gen_y_optim = Adam(params=gen_y.parameters(), lr=lr)
-    ### Gx와 Gy의 parameters를 묶어서 하나의 optimzer를 만듭니다!
     gen_optim = Adam(params=list(gen_x.parameters()) + list(gen_y.parameters()), lr=lr)
-    # return disc_x_optim, disc_y_optim, gen_x_optim, gen_y_optim
-    # return disc_x_optim, disc_y_optim, gen_optim
     return disc_optim, gen_optim
 
 
@@ -113,7 +108,7 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_
     return disc_x_loss, disc_y_loss
 
 
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_crit, identity_crit, cycle_crit):
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_crit, id_crit, cycle_crit):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
@@ -123,8 +118,8 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_cr
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = gan_crit(fake_x_pred, real_gt)
 
-        gen_x_identity_loss = identity_crit(gen_x(real_y), real_y)
-        gen_y_identity_loss = identity_crit(gen_y(real_x), real_x)
+        gen_x_id_loss = id_crit(gen_x(real_y), real_y)
+        gen_y_id_loss = id_crit(gen_y(real_x), real_x)
 
         # fake_y = gen_x(real_x)
         fake_fake_x = gen_y(fake_y)
@@ -136,8 +131,8 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, gan_cr
     return (
         gen_x_gan_loss,
         gen_y_gan_loss,
-        gen_x_identity_loss,
-        gen_y_identity_loss,
+        gen_x_id_loss,
+        gen_y_id_loss,
         forward_cycle_loss,
         backward_cycle_loss,
     )
@@ -217,7 +212,7 @@ if __name__ == "__main__":
 
     gan_crit = nn.BCEWithLogitsLoss()
     cycle_crit = nn.L1Loss()
-    identity_crit = nn.L1Loss()
+    id_crit = nn.L1Loss()
 
     ### Train.
     REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
@@ -249,10 +244,12 @@ if __name__ == "__main__":
         accum_disc_x_loss = 0
         accum_gen_x_gan_loss = 0
         accum_gen_y_gan_loss = 0
-        accum_gen_x_identity_loss = 0
-        accum_gen_y_identity_loss = 0
+        accum_gen_x_id_loss = 0
+        accum_gen_y_id_loss = 0
         accum_forward_cycle_loss = 0
         accum_backward_cycle_loss = 0
+
+        start_time = time()
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
             real_x = real_x.to(config.DEVICE)
             real_y = real_y.to(config.DEVICE)
@@ -286,8 +283,8 @@ if __name__ == "__main__":
             (
                 gen_x_gan_loss,
                 gen_y_gan_loss,
-                gen_x_identity_loss,
-                gen_y_identity_loss,
+                gen_x_id_loss,
+                gen_y_id_loss,
                 forward_cycle_loss,
                 backward_cycle_loss,
             ) = get_gen_losses(
@@ -299,38 +296,35 @@ if __name__ == "__main__":
                 real_y=real_y,
                 real_gt=REAL_GT,
                 gan_crit=gan_crit,
-                identity_crit=identity_crit,
+                id_crit=id_crit,
                 cycle_crit=cycle_crit,
             )
             gen_loss = gen_x_gan_loss + gen_y_gan_loss
-            gen_loss += 0.5 * config.LAMB * (gen_x_identity_loss + gen_y_identity_loss)
+            gen_loss += 0.5 * config.LAMB * (gen_x_id_loss + gen_y_id_loss)
             gen_loss += config.LAMB * (forward_cycle_loss +  backward_cycle_loss)
 
-            # gen_x_optim.zero_grad()
-            # gen_y_optim.zero_grad()
             gen_optim.zero_grad()
             scaler.scale(gen_loss).backward()
-            # scaler.step(gen_x_optim)
-            # scaler.step(gen_y_optim)
             scaler.step(gen_optim)
 
             scaler.update()
 
             accum_gen_x_gan_loss += gen_x_gan_loss.item()
             accum_gen_y_gan_loss += gen_y_gan_loss.item()
-            accum_gen_x_identity_loss  += gen_x_identity_loss.item()
-            accum_gen_y_identity_loss  += gen_y_identity_loss.item()
+            accum_gen_x_id_loss  += gen_x_id_loss.item()
+            accum_gen_y_id_loss  += gen_y_id_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
         print(f"[ {epoch}/{config.N_EPOCHS} ]", end="")
+        print(f"[ {get_elapsed_time(start_time)} ]", end="")
         print(f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx identity: {accum_gen_x_identity_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy identity: {accum_gen_y_identity_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         ### Generate samples.

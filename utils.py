@@ -4,6 +4,8 @@ from einops import rearrange
 import numpy as np
 from PIL import Image
 from pathlib import Path
+from datetime import timedelta
+from time import time
 
 
 def get_device():
@@ -59,7 +61,11 @@ def _to_pil(img):
     return img
 
 
-def save_image(img, path):
+def save_image(image, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    _to_pil(img).save(str(path))
+    _to_pil(image).save(str(path), quality=100)
+
+
+def get_elapsed_time(start_time):
+    return timedelta(seconds=round(time() - start_time))
