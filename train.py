@@ -79,6 +79,11 @@ def get_models(device):
     disc_y = Discriminator().to(device)
     gen_x = Generator().to(device)
     gen_y = Generator().to(device)
+
+    disc_x = torch.compile(disc_x)
+    disc_y = torch.compile(disc_y)
+    gen_x = torch.compile(gen_x)
+    gen_y = torch.compile(gen_y)
     return disc_x, disc_y, gen_x, gen_y
 
 
