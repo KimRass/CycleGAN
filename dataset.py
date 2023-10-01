@@ -14,8 +14,8 @@ class UnpairedImageDataset(Dataset):
         x_std,
         y_mean,
         y_std,
-        split="train",
         fixed_pairs=False,
+        split="train",
     ):
         super().__init__()
 
@@ -23,8 +23,8 @@ class UnpairedImageDataset(Dataset):
         self.x_std = x_std
         self.y_mean = y_mean
         self.y_std = y_std
-        self.split = split
         self.fixed_pairs = fixed_pairs
+        self.split = split
 
         self.x_paths = list(Path(data_dir).glob(f"""{split}A/*.jpg"""))
         self.x_len = len(self.x_paths)

@@ -69,3 +69,13 @@ def save_image(image, path):
 
 def get_elapsed_time(start_time):
     return timedelta(seconds=round(time() - start_time))
+
+
+def freeze_model(model):
+    for p in model.parameters():
+        p.requires_grad = False
+
+
+def unfreeze_model(model):
+    for p in model.parameters():
+        p.requires_grad = True

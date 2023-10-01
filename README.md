@@ -2,7 +2,15 @@
 ## Paper Reading
 - [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593)
 ## Pre-trained Models
+### Monet to Photo
+- [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/1E744ja5yXul1k0hHwoa5bvj9gRctRzZ0/view?usp=sharing)
+### Photo to Monet
+- [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1p6ODKtC4Jrd6BlwXBWn7TiT--htvpcp_/view?usp=sharing)
 ## Generated Image Samples
+### Monet to Photo
+- https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo
+### Photo to Monet
+- https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet
 ## Research
 ### Merging Optimizers
 - - discriminators (Dx와 Dy)와 generators (Gx와 Gy)의 objective는 방향성이 서로 충돌하지만 (adversarial training) Dx와 Dy 그리고 Gx와 Gy는 서로 objective의 방향성이 동일하므로, Dx의 Optimizer와 Dy의 Optimizer를 하나로 합치고, Gx의 Optimizer와 Gy의 Optimizer를 하나로 합쳤습니다.
@@ -36,3 +44,4 @@
         y_path = self.y_paths[idx]
         x_path = random.choice(self.x_paths)
     ```
+### Image Pairing

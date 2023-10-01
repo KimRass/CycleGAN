@@ -7,14 +7,18 @@ X_MEAN = (0.5, 0.5, 0.5)
 X_STD = (0.5, 0.5, 0.5)
 Y_MEAN = (0.5, 0.5, 0.5)
 Y_STD = (0.5, 0.5, 0.5)
-FIXED_PAIRS = False
+FIXED_PAIRS = True
 
 ### Training
 DEVICE = get_device()
-LAMB = 10 # "We set $\lambda = 10$."
+CYCLE_LAMB = 10 # "We set $\lambda = 10$."
+# "The weight for the identity mapping loss was $0.5\lambda$  where $\lambda$ was the weight for cycle consistency
+# loss."
+ID_LAMB = 0.5 * CYCLE_LAMB
 # "We keep the same learning rate for the first 100 epochs and linearly decay the rate
 # to zero over the next 100 epochs."
 N_EPOCHS = 200
+SAVE_EVERY = 10
 
 ### Optimizer
 WARMUP_EPOCHS = 100
