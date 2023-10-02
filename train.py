@@ -113,7 +113,8 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_
         fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x.detach())
         fake_disc_x_loss = gan_crit(fake_x_pred, fake_gt)
-        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2 * 0.5
+        # disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2 * 0.5
+        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
     return fake_y, fake_x, disc_y_loss, disc_x_loss
 
 
