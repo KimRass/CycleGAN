@@ -233,10 +233,24 @@ if __name__ == "__main__":
     test_real_x = test_real_x.to(config.DEVICE)
     test_real_y = test_real_y.to(config.DEVICE)
 
-    prev_gen_x_ckpt_path = ".pth"
-    prev_gen_y_ckpt_path = ".pth"
-    init_epoch = 0
-    best_loss = math.inf
+    ### Resume
+    if args.resume_from is not None:
+        ckpt = torch.load(args.resume_from, map_location=config.DEVICE)
+        disc_x.load_state_dict(ckpt["Dx"])
+        disc_y.load_state_dict(ckpt["Dy"])
+        gen_x.load_state_dict(ckpt["Gx"])
+        gen_y.load_state_dict(ckpt["Gy"])
+        disc_optim.load_state_dict(ckpt["D_optimizer"])
+        gen_optim.load_state_dict(ckpt["G_optimizer"])
+        scaler.load_state_dict(ckpt["scaler"])
+        init_epoch = ckpt["epoch"]
+        print(f"Resume from checkpoint '{args.resume_from}'.")
+    else:
+        prev_ckpt_path = ".pth"
+        init_epoch = 0
+
+    # prev_gen_x_ckpt_path = ".pth"
+    # prev_gen_y_ckpt_path = ".pth"
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
             # disc_x_optim=disc_x_optim,
@@ -380,7 +394,7 @@ if __name__ == "__main__":
             # save_gen(gen=gen_y, save_path=cur_gen_y_ckpt_path)
             # Path(prev_gen_y_ckpt_path).unlink(missing_ok=True)
             # prev_gen_y_ckpt_path = cur_gen_y_ckpt_path
-            ckpt_path = f"{PARENT_DIR}/checkpoint/{args.ds_name}/epoch_{epoch}.pth"
+            ckpt_path = f"{PARENT_DIR}/checkpoints/{args.ds_name}/epoch_{epoch}.pth"
             save_checkpoint(
                 epoch=epoch,
                 disc_x=disc_x,
