@@ -66,7 +66,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
     test_dl = DataLoader(
         test_ds,
         batch_size=test_batch_size,
-        shuffle=False,
+        shuffle=True,
         num_workers=n_workers,
         pin_memory=True,
         drop_last=False,
