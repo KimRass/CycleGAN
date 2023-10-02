@@ -104,17 +104,14 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y.detach())
         fake_disc_y_loss = gan_crit(fake_y_pred, fake_gt)
-        # "We divide the objective by 2 while optimizing D, which slows down the rate at
-        # which D learns, relative to the rate of G."
-        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
+        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) * config.DISC_Y_WEIGHT
 
         real_x_pred = disc_x(real_x)
         real_disc_x_loss = gan_crit(real_x_pred, real_gt)
         fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x.detach())
         fake_disc_x_loss = gan_crit(fake_x_pred, fake_gt)
-        # disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2 * 0.5
-        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
+        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) * config.DISC_X_WEIGHT
     return fake_y, fake_x, disc_y_loss, disc_x_loss
 
 
@@ -299,14 +296,18 @@ if __name__ == "__main__":
                 fake_gt=FAKE_GT,
                 gan_crit=gan_crit,
             )
-            disc_loss = disc_y_loss + disc_x_loss
+
+            disc_y_optim.zero_grad()
+            scaler.scale(disc_y_loss).backward()
+            scaler.step(disc_y_optim)
 
             disc_x_optim.zero_grad()
-            disc_y_optim.zero_grad()
-            # disc_optim.zero_grad()
-            scaler.scale(disc_loss).backward()
+            scaler.scale(disc_x_loss).backward()
             scaler.step(disc_x_optim)
-            scaler.step(disc_y_optim)
+
+            # disc_loss = disc_y_loss + disc_x_loss
+            # disc_optim.zero_grad()
+            # scaler.scale(disc_loss).backward()
             # scaler.step(disc_optim)
 
             accum_disc_y_loss += disc_y_loss.item()
