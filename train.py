@@ -89,9 +89,12 @@ def get_models(device):
 
 def get_optims(disc_x, disc_y, gen_x, gen_y, lr):
     # "We use the Adam solver."
-    disc_optim = Adam(params=list(disc_x.parameters()) + list(disc_y.parameters()), lr=lr)
-    gen_optim = Adam(params=list(gen_x.parameters()) + list(gen_y.parameters()), lr=lr)
-    return disc_optim, gen_optim
+    # disc_optim = Adam(list(disc_x.parameters()) + list(disc_y.parameters()), lr=lr)
+    disc_x_optim = Adam(disc_x.parameters(), lr=lr)
+    disc_y_optim = Adam(disc_y.parameters(), lr=lr)
+    gen_optim = Adam(list(gen_x.parameters()) + list(gen_y.parameters()), lr=lr)
+    # return disc_optim, gen_optim
+    return disc_x_optim, disc_y_optim, gen_optim
 
 
 def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, gan_crit):
@@ -162,9 +165,9 @@ def _get_lr(epoch, max_lr, warmup_epochs, n_epochs):
 
 
 def update_lrs(
-    # disc_x_optim,
-    # disc_y_optim,
-    disc_optim,
+    disc_x_optim,
+    disc_y_optim,
+    # disc_optim,
     gen_optim,
     epoch,
     max_lr,
@@ -172,14 +175,15 @@ def update_lrs(
     n_epochs,
 ):
     lr = _get_lr(epoch=epoch, max_lr=max_lr, warmup_epochs=warmup_epochs, n_epochs=n_epochs)
-    # disc_x_optim.param_groups[0]["lr"] = lr
-    # disc_y_optim.param_groups[0]["lr"] = lr
-    disc_optim.param_groups[0]["lr"] = lr
+    disc_x_optim.param_groups[0]["lr"] = lr
+    disc_y_optim.param_groups[0]["lr"] = lr
+    # disc_optim.param_groups[0]["lr"] = lr
     gen_optim.param_groups[0]["lr"] = lr
 
 
 def save_checkpoint(
-    epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, save_path,
+    # epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, save_path,
+    epoch, disc_x, disc_y, gen_x, gen_y, disc_x_optim, disc_y_optim, gen_optim, scaler, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     ckpt = {
@@ -188,7 +192,9 @@ def save_checkpoint(
         "Dy": disc_y.state_dict(),
         "Gx": gen_x.state_dict(),
         "Gy": gen_y.state_dict(),
-        "D_optimizer": disc_optim.state_dict(),
+        # "D_optimizer": disc_optim.state_dict(),
+        "Dx_optimizer": disc_x_optim.state_dict(),
+        "Dy_optimizer": disc_y_optim.state_dict(),
         "G_optimizer": gen_optim.state_dict(),
         "scaler": scaler.state_dict(),
     }
@@ -214,8 +220,8 @@ if __name__ == "__main__":
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
-    # disc_x_optim, disc_y_optim, gen_optim = get_optims(
-    disc_optim, gen_optim = get_optims(
+    disc_x_optim, disc_y_optim, gen_optim = get_optims(
+    # disc_optim, gen_optim = get_optims(
         disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y, lr=args.lr,
     )
 
@@ -240,7 +246,9 @@ if __name__ == "__main__":
         disc_y.load_state_dict(ckpt["Dy"])
         gen_x.load_state_dict(ckpt["Gx"])
         gen_y.load_state_dict(ckpt["Gy"])
-        disc_optim.load_state_dict(ckpt["D_optimizer"])
+        # disc_optim.load_state_dict(ckpt["D_optimizer"])
+        disc_x_optim.load_state_dict(ckpt["Dx_optimizer"])
+        disc_y_optim.load_state_dict(ckpt["Dy_optimizer"])
         gen_optim.load_state_dict(ckpt["G_optimizer"])
         scaler.load_state_dict(ckpt["scaler"])
         init_epoch = ckpt["epoch"]
@@ -253,9 +261,9 @@ if __name__ == "__main__":
     # prev_gen_y_ckpt_path = ".pth"
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
-            # disc_x_optim=disc_x_optim,
-            # disc_y_optim=disc_y_optim,
-            disc_optim=disc_optim,
+            disc_x_optim=disc_x_optim,
+            disc_y_optim=disc_y_optim,
+            # disc_optim=disc_optim,
             gen_optim=gen_optim,
             epoch=epoch,
             max_lr=args.lr,
@@ -292,13 +300,13 @@ if __name__ == "__main__":
             )
             disc_loss = disc_y_loss + disc_x_loss
 
-            # disc_x_optim.zero_grad()
-            # disc_y_optim.zero_grad()
-            disc_optim.zero_grad()
+            disc_x_optim.zero_grad()
+            disc_y_optim.zero_grad()
+            # disc_optim.zero_grad()
             scaler.scale(disc_loss).backward()
-            # scaler.step(disc_x_optim)
-            # scaler.step(disc_y_optim)
-            scaler.step(disc_optim)
+            scaler.step(disc_x_optim)
+            scaler.step(disc_y_optim)
+            # scaler.step(disc_optim)
 
             accum_disc_y_loss += disc_y_loss.item()
             accum_disc_x_loss += disc_x_loss.item()
@@ -401,7 +409,9 @@ if __name__ == "__main__":
                 disc_y=disc_y,
                 gen_x=gen_x,
                 gen_y=gen_y,
-                disc_optim=disc_optim,
+                # disc_optim=disc_optim,
+                disc_x_optim=disc_x_optim,
+                disc_y_optim=disc_y_optim,
                 gen_optim=gen_optim,
                 scaler=scaler,
                 save_path=ckpt_path,
