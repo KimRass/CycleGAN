@@ -5,6 +5,8 @@ from PIL import Image
 from pathlib import Path
 import random
 
+import config
+
 
 class UnpairedImageDataset(Dataset):
     def __init__(
