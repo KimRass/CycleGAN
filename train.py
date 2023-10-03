@@ -104,7 +104,9 @@ def get_disc_losses(image_buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, 
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
         fake_y = gen_x(real_x)
+        print(fake_y.shape)
         buffered_fake_y = image_buffer(fake_y)
+        print(buffered_fake_y.shape)
         fake_y_pred = disc_y(buffered_fake_y.detach())
         fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
