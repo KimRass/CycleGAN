@@ -104,14 +104,16 @@ def get_disc_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y.detach())
         fake_disc_y_loss = gan_crit(fake_y_pred, fake_gt)
-        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) * config.DISC_Y_WEIGHT
+        # disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) * config.DISC_Y_WEIGHT
+        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
 
         real_x_pred = disc_x(real_x)
         real_disc_x_loss = gan_crit(real_x_pred, real_gt)
         fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x.detach())
         fake_disc_x_loss = gan_crit(fake_x_pred, fake_gt)
-        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) * config.DISC_X_WEIGHT
+        # disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) * config.DISC_X_WEIGHT
+        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
     return fake_y, fake_x, disc_y_loss, disc_x_loss
 
 
@@ -129,6 +131,7 @@ def get_gen_losses(
         # fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = gan_crit(fake_x_pred, real_gt)
+        gen_y_gan_loss *= 1.3
 
         gen_x_id_loss = id_crit(gen_x(real_y), real_y)
         gen_y_id_loss = id_crit(gen_y(real_x), real_x)
