@@ -99,12 +99,12 @@ def get_optims(disc_x, disc_y, gen_x, gen_y):
     return disc_optim, gen_optim
 
 
-def get_disc_losses(buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt):
+def get_disc_losses(image_buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
         fake_y = gen_x(real_x)
-        buffered_fake_y = buffer(fake_y)
+        buffered_fake_y = image_buffer(fake_y)
         fake_y_pred = disc_y(buffered_fake_y.detach())
         fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
@@ -114,7 +114,7 @@ def get_disc_losses(buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_g
         real_x_pred = disc_x(real_x)
         real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
         fake_x = gen_y(real_y)
-        buffered_fake_x = buffer(fake_x)
+        buffered_fake_x = image_buffer(fake_x)
         fake_x_pred = disc_x(buffered_fake_x.detach())
         fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
@@ -202,7 +202,7 @@ def save_gen(gen, save_path):
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
-    buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
+    image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     args = get_args()
 
@@ -268,6 +268,7 @@ if __name__ == "__main__":
 
             ### Train Dx and Dy.
             fake_y, fake_x, disc_y_loss, disc_x_loss = get_disc_losses(
+                image_buffer=image_buffer,
                 disc_x=disc_x,
                 disc_y=disc_y,
                 gen_x=gen_x,
