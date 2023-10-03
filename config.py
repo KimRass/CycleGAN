@@ -17,7 +17,8 @@ CYCLE_LAMB = 10 # "We set $\lambda = 10$."
 ID_LAMB = 0.5 * CYCLE_LAMB
 # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns, relative to the
 # rate of G."
-DISC_X_WEIGHT = 0.2
+# DISC_X_WEIGHT = 0.2
+DISC_X_WEIGHT = 0.8
 DISC_Y_WEIGHT = 0.5
 # "We keep the same learning rate for the first 100 epochs and linearly decay the rate
 # to zero over the next 100 epochs."

@@ -259,9 +259,9 @@ if __name__ == "__main__":
     # prev_gen_y_ckpt_path = ".pth"
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
-            disc_x_optim=disc_x_optim,
-            disc_y_optim=disc_y_optim,
-            # disc_optim=disc_optim,
+            # disc_x_optim=disc_x_optim,
+            # disc_y_optim=disc_y_optim,
+            disc_optim=disc_optim,
             gen_optim=gen_optim,
             epoch=epoch,
             max_lr=args.lr,
@@ -297,18 +297,18 @@ if __name__ == "__main__":
                 gan_crit=gan_crit,
             )
 
-            disc_y_optim.zero_grad()
+            # disc_y_optim.zero_grad()
             scaler.scale(disc_y_loss).backward()
-            scaler.step(disc_y_optim)
+            # scaler.step(disc_y_optim)
 
-            disc_x_optim.zero_grad()
+            # disc_x_optim.zero_grad()
             scaler.scale(disc_x_loss).backward()
             scaler.step(disc_x_optim)
 
             # disc_loss = disc_y_loss + disc_x_loss
-            # disc_optim.zero_grad()
+            disc_optim.zero_grad()
             # scaler.scale(disc_loss).backward()
-            # scaler.step(disc_optim)
+            scaler.step(disc_optim)
 
             accum_disc_y_loss += disc_y_loss.item()
             accum_disc_x_loss += disc_x_loss.item()
