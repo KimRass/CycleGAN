@@ -110,5 +110,5 @@ class ImageBuffer(object):
                     self.images[idx] = unbatched_image # 새로운 이미지를 저장합니다.
                 else:
                     images_to_return.append(unbatched_image)
-        new_image = torch.cat(images_to_return, dim=0)
+        new_image = torch.stack(images_to_return, dim=0)
         return new_image
