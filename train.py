@@ -177,6 +177,35 @@ def update_lrs(
     gen_optim.param_groups[0]["lr"] = lr
 
 
+def generate_samples(gen_x, gen_y, real_x, real_y):
+    gen_x.eval()
+    with torch.no_grad():
+        test_fake_y = gen_x(real_x)
+    grid_xy = images_to_grid(
+        x=test_real_x,
+        y=test_fake_y,
+        x_mean=config.X_MEAN,
+        x_std=config.X_STD,
+        y_mean=config.Y_MEAN,
+        y_std=config.Y_STD,
+    )
+    gen_x.train()
+
+    gen_y.eval()
+    with torch.no_grad():
+        test_fake_x = gen_y(real_y)
+    grid_yx = images_to_grid(
+        x=test_real_y,
+        y=test_fake_x,
+        x_mean=config.X_MEAN,
+        x_std=config.X_STD,
+        y_mean=config.Y_MEAN,
+        y_std=config.Y_STD,
+    )
+    gen_y.train()
+    return grid_xy, grid_yx
+
+
 def save_checkpoint(
     epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, save_path,
 ):
@@ -336,36 +365,15 @@ if __name__ == "__main__":
         print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         ### Generate samples.
-        gen_x.eval()
-        with torch.no_grad():
-            test_fake_y = gen_x(test_real_x)
-        grid_xy = images_to_grid(
-            x=test_real_x,
-            y=test_fake_y,
-            x_mean=config.X_MEAN,
-            x_std=config.X_STD,
-            y_mean=config.Y_MEAN,
-            y_std=config.Y_STD,
-        )
-        save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_forward.jpg")
-        gen_x.train()
-
-        gen_y.eval()
-        with torch.no_grad():
-            test_fake_x = gen_y(test_real_y)
-        grid_yx = images_to_grid(
-            x=test_real_y,
-            y=test_fake_x,
-            x_mean=config.X_MEAN,
-            x_std=config.X_STD,
-            y_mean=config.Y_MEAN,
-            y_std=config.Y_STD,
-        )
-        save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_backward.jpg")
-        gen_y.train()
+        if epoch % config.GEN_SAMPLES_EVERY == 0:
+            grid_xy, grid_yx = generate_samples(
+                gen_x=gen_x, gen_y=gen_y, real_x=test_real_x, real_y=test_real_y,
+            )
+            save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_forward.jpg")
+            save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_backward.jpg")
 
         ### Save checkpoint.
-        if epoch % config.SAVE_EVERY == 0:        
+        if epoch % config.SAVE_CKPT_EVERY == 0:
             # ### Save Gs.
             # cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}/Gx_epoch_{epoch}.pth"
             # save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
