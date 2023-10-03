@@ -1,6 +1,5 @@
 # References:
-    # https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/train
-    # https://daebaq27.tistory.com/111
+    # https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/cycle_gan_model.py
 
 import torch
 from torch.utils.data import DataLoader
@@ -104,9 +103,7 @@ def get_disc_losses(image_buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, 
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
         fake_y = gen_x(real_x)
-        # print(fake_y.shape)
         buffered_fake_y = image_buffer(fake_y)
-        # print(buffered_fake_y.shape)
         fake_y_pred = disc_y(buffered_fake_y.detach())
         fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
@@ -330,12 +327,12 @@ if __name__ == "__main__":
         print(f"[ {epoch}/{config.N_EPOCHS} ]", end="")
         print(f"[ {get_elapsed_time(start_time)} ]", end="")
         print(f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]", end="")
+        print(f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
         print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
 
         ### Generate samples.
