@@ -98,13 +98,15 @@ def get_optims(disc_x, disc_y, gen_x, gen_y):
     return disc_optim, gen_optim
 
 
-def get_disc_losses(image_buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt):
+def get_disc_losses(
+    disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, x_image_buffer, y_image_buffer,
+):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
         fake_y = gen_x(real_x)
-        buffered_fake_y = image_buffer(fake_y)
-        fake_y_pred = disc_y(buffered_fake_y.detach())
+        past_fake_y = y_image_buffer(fake_y)
+        fake_y_pred = disc_y(past_fake_y.detach())
         fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
         # relative to the rate of G."
@@ -113,8 +115,8 @@ def get_disc_losses(image_buffer, disc_x, disc_y, gen_x, gen_y, real_x, real_y, 
         real_x_pred = disc_x(real_x)
         real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
         fake_x = gen_y(real_y)
-        buffered_fake_x = image_buffer(fake_x)
-        fake_x_pred = disc_x(buffered_fake_x.detach())
+        past_fake_x = x_image_buffer(fake_x)
+        fake_x_pred = disc_x(past_fake_x.detach())
         fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
         # relative to the rate of G."
@@ -230,7 +232,8 @@ def save_gen(gen, save_path):
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
-    image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
+    x_image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
+    y_image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     args = get_args()
 
@@ -296,7 +299,6 @@ if __name__ == "__main__":
 
             ### Train Dx and Dy.
             fake_y, fake_x, disc_y_loss, disc_x_loss = get_disc_losses(
-                image_buffer=image_buffer,
                 disc_x=disc_x,
                 disc_y=disc_y,
                 gen_x=gen_x,
@@ -305,6 +307,8 @@ if __name__ == "__main__":
                 real_y=real_y,
                 real_gt=REAL_GT,
                 fake_gt=FAKE_GT,
+                x_image_buffer=x_image_buffer,
+                y_image_buffer=y_image_buffer,
             )
 
             disc_loss = disc_y_loss + disc_x_loss
@@ -353,16 +357,17 @@ if __name__ == "__main__":
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
-        print(f"[ {epoch}/{config.N_EPOCHS} ]", end="")
-        print(f"[ {get_elapsed_time(start_time)} ]", end="")
-        print(f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]", end="")
-        print(f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]")
+        msg = f"[ {epoch}/{config.N_EPOCHS} ]"
+        msg += f"\n[ {get_elapsed_time(start_time)} ]"
+        msg += f"\n[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
+        msg += f"\n[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
+        print(msg)
 
         ### Generate samples.
         if epoch % config.GEN_SAMPLES_EVERY == 0:
