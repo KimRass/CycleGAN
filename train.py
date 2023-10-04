@@ -29,7 +29,7 @@ def get_args():
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
     # "We use the Adam solver with a batch size of 1."
-    parser.add_argument("--n_workers", type=int, required=True)
+    parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     # parser.add_argument("--lr", type=float, required=False, default=0.0002)
     parser.add_argument("--train_batch_size", type=int, required=False, default=1)
@@ -39,7 +39,7 @@ def get_args():
     return args
 
 
-def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
+def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus):
     train_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
@@ -63,7 +63,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
         train_ds,
         batch_size=train_batch_size,
         shuffle=True,
-        num_workers=n_workers,
+        num_workers=n_cpus,
         pin_memory=True,
         drop_last=True,
     )
@@ -71,7 +71,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_workers):
         test_ds,
         batch_size=test_batch_size,
         shuffle=True,
-        num_workers=n_workers,
+        num_workers=n_cpus,
         pin_memory=True,
         drop_last=False,
     )
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         data_dir=args.data_dir,
         train_batch_size=args.train_batch_size,
         test_batch_size=args.test_batch_size,
-        n_workers=args.n_workers,
+        n_cpus=args.n_cpus,
     )
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
