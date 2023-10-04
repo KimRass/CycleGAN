@@ -99,13 +99,13 @@ def get_optims(disc_x, disc_y, gen_x, gen_y):
 
 
 def get_disc_losses(
-    disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, x_image_buffer, y_image_buffer,
+    disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, x_img_buffer, y_img_buffer,
 ):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         real_y_pred = disc_y(real_y)
         real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
         fake_y = gen_x(real_x)
-        past_fake_y = y_image_buffer(fake_y)
+        past_fake_y = y_img_buffer(fake_y)
         fake_y_pred = disc_y(past_fake_y.detach())
         fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
@@ -115,7 +115,7 @@ def get_disc_losses(
         real_x_pred = disc_x(real_x)
         real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
         fake_x = gen_y(real_y)
-        past_fake_x = x_image_buffer(fake_x)
+        past_fake_x = x_img_buffer(fake_x)
         fake_x_pred = disc_x(past_fake_x.detach())
         fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
@@ -209,7 +209,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
 
 
 def save_checkpoint(
-    epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, save_path,
+    epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     ckpt = {
@@ -221,6 +221,8 @@ def save_checkpoint(
         "D_optimizer": disc_optim.state_dict(),
         "G_optimizer": gen_optim.state_dict(),
         "scaler": scaler.state_dict(),
+        "stored_x_images": x_img_buffer.stored_images,
+        "stored_y_images": y_img_buffer.stored_images,
     }
     torch.save(ckpt, str(save_path))
 
@@ -232,8 +234,6 @@ def save_gen(gen, save_path):
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
-    x_image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
-    y_image_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     args = get_args()
 
@@ -258,6 +258,9 @@ if __name__ == "__main__":
     test_real_x = test_real_x.to(config.DEVICE)
     test_real_y = test_real_y.to(config.DEVICE)
 
+    x_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
+    y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
+
     ### Resume
     if args.resume_from is not None:
         ckpt = torch.load(args.resume_from, map_location=config.DEVICE)
@@ -269,6 +272,8 @@ if __name__ == "__main__":
         gen_optim.load_state_dict(ckpt["G_optimizer"])
         scaler.load_state_dict(ckpt["scaler"])
         init_epoch = ckpt["epoch"]
+        x_img_buffer.stored_images=ckpt["stored_x_images"]
+        y_img_buffer.stored_images=ckpt["stored_y_images"]
         print(f"Resume from checkpoint '{args.resume_from}'.")
     else:
         prev_ckpt_path = ".pth"
@@ -307,8 +312,8 @@ if __name__ == "__main__":
                 real_y=real_y,
                 real_gt=REAL_GT,
                 fake_gt=FAKE_GT,
-                x_image_buffer=x_image_buffer,
-                y_image_buffer=y_image_buffer,
+                x_img_buffer=x_img_buffer,
+                y_img_buffer=y_img_buffer,
             )
 
             disc_loss = disc_y_loss + disc_x_loss
@@ -399,5 +404,7 @@ if __name__ == "__main__":
                 disc_optim=disc_optim,
                 gen_optim=gen_optim,
                 scaler=scaler,
+                x_img_buffer=x_img_buffer,
+                y_img_buffer=y_img_buffer,
                 save_path=ckpt_path,
             )

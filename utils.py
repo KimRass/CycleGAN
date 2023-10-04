@@ -90,25 +90,25 @@ def unfreeze_model(model):
 class ImageBuffer(object):
 # "To reduce model oscillation we update the discriminators using a history of generated images rather than the
 # ones produced by the latest generators. We keep an image buffer that stores the 50 previously created images."
-    def __init__(self, buffer_size):
+    def __init__(self, buffer_size, stored_images=list()):
         self.buffer_size = buffer_size
 
-        self.images = list()
+        self.stored_images = stored_images
         self._cnt = 0
 
     def __call__(self, image):
         images_to_return = list()
         for unbatched_image in image:
             if self._cnt < self.buffer_size:
-                self.images.append(unbatched_image)
+                self.stored_images.append(unbatched_image)
                 self._cnt += 1
                 images_to_return.append(unbatched_image)
             else: # buffer가 가득 찼다면
                 if random.random() > 0.5: # 50%의 확률로
-                    idx = random.randrange(len(self.images))
-                    images_to_return.append(self.images[idx]) # buffer에서 하나의 이미지를 빼고
-                    self.images[idx] = unbatched_image # 새로운 이미지를 저장합니다.
-                else:
-                    images_to_return.append(unbatched_image)
+                    idx = random.randrange(len(self.stored_images))
+                    images_to_return.append(self.stored_images[idx]) # buffer에서 하나의 이미지를 빼고
+                    self.stored_images[idx] = unbatched_image # 새로운 이미지를 저장합니다.
+                else: # 다른 50%의 확률로
+                    images_to_return.append(unbatched_image) # 입력 받은 이미지를 그대로 출력합니다.
         new_image = torch.stack(images_to_return, dim=0)
         return new_image
