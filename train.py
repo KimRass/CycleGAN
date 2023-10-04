@@ -363,15 +363,15 @@ if __name__ == "__main__":
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
         msg = f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"\n[ {get_elapsed_time(start_time)} ]"
-        msg += f"\n[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
-        msg += f"\n[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
+        msg += f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
+        msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
+        msg += f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
+        msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
         print(msg)
 
         ### Generate samples.
