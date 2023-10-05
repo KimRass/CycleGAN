@@ -106,7 +106,7 @@ class ImageBuffer(object):
             else: # buffer가 가득 찼다면
                 if random.random() > 0.5: # 50%의 확률로
                     idx = random.randrange(len(self.stored_images))
-                    images_to_return.append(self.stored_images[idx]) # buffer에서 하나의 이미지를 빼고
+                    images_to_return.append(self.stored_images[idx].clone()) # buffer에서 하나의 이미지를 빼고
                     self.stored_images[idx] = unbatched_image # 새로운 이미지를 저장합니다.
                 else: # 다른 50%의 확률로
                     images_to_return.append(unbatched_image) # 입력 받은 이미지를 그대로 출력합니다.
