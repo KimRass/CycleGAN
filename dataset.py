@@ -1,3 +1,6 @@
+# References:
+    # https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/data/unaligned_dataset.py
+
 from torch.utils.data import Dataset
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
@@ -34,7 +37,13 @@ class UnpairedImageDataset(Dataset):
         self.y_paths = list(Path(data_dir).glob(f"""{split}B/*.jpg"""))
         self.y_len = len(self.y_paths)
 
+        self.rand_resize_crop = T.RandomResizedCrop(
+            size=config.IMG_SIZE, scale=config.SCALE, ratio=(1, 1), antialias=True,
+        ) # Not in the paper.
+
     def transform(self, x, y):
+        x = self.rand_resize_crop(x)
+        y = self.rand_resize_crop(y)
         if self.split == "train":
             if random.random() > 0.5:
                 x = TF.hflip(x)

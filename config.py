@@ -9,6 +9,7 @@ X_STD = (0.5, 0.5, 0.5)
 Y_MEAN = (0.5, 0.5, 0.5)
 Y_STD = (0.5, 0.5, 0.5)
 FIXED_PAIRS = False
+SCALE = (0.8, 1)
 
 ### Objective
 # "For $\mathcal{L}_{GAN}$, we replace the negative log likelihood objective by a least-squares loss. This loss
