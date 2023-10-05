@@ -94,7 +94,7 @@ class ImageBuffer(object):
         self.buffer_size = buffer_size
 
         self.stored_images = stored_images
-        self._cnt = 0
+        self._cnt = len(stored_images)
 
     def __call__(self, image):
         images_to_return = list()
