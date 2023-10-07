@@ -37,13 +37,13 @@ class UnpairedImageDataset(Dataset):
         self.y_paths = list(Path(data_dir).glob(f"""{split}B/*.jpg"""))
         self.y_len = len(self.y_paths)
 
-        self.rand_resize_crop = T.RandomResizedCrop(
+        self.rand_resized_crop = T.RandomResizedCrop(
             size=config.IMG_SIZE, scale=config.SCALE, ratio=(1, 1), antialias=True,
         ) # Not in the paper.
 
     def transform(self, x, y):
-        x = self.rand_resize_crop(x)
-        y = self.rand_resize_crop(y)
+        x = self.rand_resized_crop(x)
+        y = self.rand_resized_crop(y)
         if self.split == "train":
             if random.random() > 0.5:
                 x = TF.hflip(x)

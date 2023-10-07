@@ -1,0 +1,4 @@
+[ 1/200 ][ 0:09:57 ][ Dy: 0.216 ][ Dx: 0.190 ][ Gx GAN: 0.434 ][ Gy GAN: 0.416 ][ Gx id: 0.209 ][ Gy id: 0.226 ][ Forward cycle: 0.232 ][ Backward cycle: 0.234 ]
+[ 2/200 ][ 0:09:20 ][ Dy: 0.192 ][ Dx: 0.176 ][ Gx GAN: 0.453 ][ Gy GAN: 0.406 ][ Gx id: 0.165 ][ Gy id: 0.176 ][ Forward cycle: 0.178 ][ Backward cycle: 0.187 ]
+[ 3/200 ][ 0:09:19 ][ Dy: 0.186 ][ Dx: 0.166 ][ Gx GAN: 0.433 ][ Gy GAN: 0.428 ][ Gx id: 0.150 ][ Gy id: 0.155 ][ Forward cycle: 0.155 ][ Backward cycle: 0.172 ]
+[ 4/200 ][ 0:09:25 ][ Dy: 0.185 ][ Dx: 0.165 ][ Gx GAN: 0.419 ][ Gy GAN: 0.440 ][ Gx id: 0.139 ][ Gy id: 0.143 ][ Forward cycle: 0.144 ][ Backward cycle: 0.162 ]
