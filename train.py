@@ -270,8 +270,8 @@ if __name__ == "__main__":
         gen_optim.load_state_dict(ckpt["G_optimizer"])
         scaler.load_state_dict(ckpt["scaler"])
         init_epoch = ckpt["epoch"]
-        x_img_buffer.stored_images=ckpt["stored_x_images"]
-        y_img_buffer.stored_images=ckpt["stored_y_images"]
+        x_img_buffer.stored_images = ckpt["stored_x_images"]
+        y_img_buffer.stored_images = ckpt["stored_y_images"]
         print(f"Resume from checkpoint '{args.resume_from}'.")
     else:
         prev_ckpt_path = ".pth"
