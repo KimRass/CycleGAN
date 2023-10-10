@@ -10,8 +10,7 @@ from pathlib import Path
 from datetime import timedelta
 from time import time
 import random
-
-import config
+from collections import OrderedDict
 
 
 def get_device():
@@ -112,3 +111,12 @@ class ImageBuffer(object):
                     images_to_return.append(unbatched_image) # 입력 받은 이미지를 그대로 출력합니다.
         new_image = torch.stack(images_to_return, dim=0)
         return new_image
+
+
+def _modify_state_dict(state_dict, keyword="_orig_mod."):
+    new_state_dict = OrderedDict()
+    for old_key in list(state_dict.keys()):
+        if old_key and old_key.startswith(keyword):
+            new_key = old_key[len(keyword):]
+            new_state_dict[new_key] = state_dict[old_key]
+    return new_state_dict

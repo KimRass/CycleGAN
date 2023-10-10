@@ -210,7 +210,7 @@ def save_checkpoint(
     epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    ckpt = {
+    state_dict = {
         "epoch": epoch,
         "Dx": disc_x.state_dict(),
         "Dy": disc_y.state_dict(),
@@ -222,12 +222,7 @@ def save_checkpoint(
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
     }
-    torch.save(ckpt, str(save_path))
-
-
-def save_gen(gen, save_path):
-    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    torch.save(gen.state_dict(), str(save_path))
+    torch.save(state_dict, str(save_path))
 
 
 if __name__ == "__main__":
@@ -261,24 +256,22 @@ if __name__ == "__main__":
 
     ### Resume
     if args.resume_from is not None:
-        ckpt = torch.load(args.resume_from, map_location=config.DEVICE)
-        disc_x.load_state_dict(ckpt["Dx"])
-        disc_y.load_state_dict(ckpt["Dy"])
-        gen_x.load_state_dict(ckpt["Gx"])
-        gen_y.load_state_dict(ckpt["Gy"])
-        disc_optim.load_state_dict(ckpt["D_optimizer"])
-        gen_optim.load_state_dict(ckpt["G_optimizer"])
-        scaler.load_state_dict(ckpt["scaler"])
-        init_epoch = ckpt["epoch"]
-        x_img_buffer.stored_images = ckpt["stored_x_images"]
-        y_img_buffer.stored_images = ckpt["stored_y_images"]
+        state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
+        disc_x.load_state_dict(state_dict["Dx"])
+        disc_y.load_state_dict(state_dict["Dy"])
+        gen_x.load_state_dict(state_dict["Gx"])
+        gen_y.load_state_dict(state_dict["Gy"])
+        disc_optim.load_state_dict(state_dict["D_optimizer"])
+        gen_optim.load_state_dict(state_dict["G_optimizer"])
+        scaler.load_state_dict(state_dict["scaler"])
+        init_epoch = state_dict["epoch"]
+        x_img_buffer.stored_images = state_dict["stored_x_images"]
+        y_img_buffer.stored_images = state_dict["stored_y_images"]
         print(f"Resume from checkpoint '{args.resume_from}'.")
     else:
         prev_ckpt_path = ".pth"
         init_epoch = 0
 
-    # prev_gen_x_ckpt_path = ".pth"
-    # prev_gen_y_ckpt_path = ".pth"
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
             disc_optim=disc_optim,
@@ -382,16 +375,6 @@ if __name__ == "__main__":
 
         ### Save checkpoint.
         if epoch % config.SAVE_CKPT_EVERY == 0:
-            # ### Save Gs.
-            # cur_gen_x_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}/Gx_epoch_{epoch}.pth"
-            # save_gen(gen=gen_x, save_path=cur_gen_x_ckpt_path)
-            # Path(prev_gen_x_ckpt_path).unlink(missing_ok=True)
-            # prev_gen_x_ckpt_path = cur_gen_x_ckpt_path
-
-            # cur_gen_y_ckpt_path = f"{PARENT_DIR}/pretrained/{args.ds_name}/Gy_epoch_{epoch}.pth"
-            # save_gen(gen=gen_y, save_path=cur_gen_y_ckpt_path)
-            # Path(prev_gen_y_ckpt_path).unlink(missing_ok=True)
-            # prev_gen_y_ckpt_path = cur_gen_y_ckpt_path
             ckpt_path = f"{PARENT_DIR}/checkpoints/{args.ds_name}/epoch_{epoch}.pth"
             save_checkpoint(
                 epoch=epoch,
