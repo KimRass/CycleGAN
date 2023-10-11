@@ -8,7 +8,7 @@ X_MEAN = (0.5, 0.5, 0.5)
 X_STD = (0.5, 0.5, 0.5)
 Y_MEAN = (0.5, 0.5, 0.5)
 Y_STD = (0.5, 0.5, 0.5)
-FIXED_PAIRS = False
+FIXED_PAIRS = True
 SCALE = (0.8, 1)
 
 ### Objective
