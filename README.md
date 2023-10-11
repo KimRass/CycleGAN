@@ -22,6 +22,10 @@ python3 generate_images.py\
 - [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1qdMDZ1IJWjVrIusboo5kPQeIVM08hdIo/view?usp=sharing)
 ### Photo to Vangogh
 - [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1CNrhdJSGe_xVDDcNyOedFtDYOmJ6qKZK/view?usp=sharing)
+### Ukiyo-e to Photo
+- [cyclegan_ukiyoe_to_photo](https://drive.google.com/file/d/1YmnubmBV_inem0kDC5PhlVXY2Waw2IMo/view?usp=sharing)
+### Photo to Ukiyo-e
+- [cyclegan_photo_to_ukiyoe](https://drive.google.com/file/d/10AzDkTrK-3czRzm37ebd8QVWZkJ8LlwO/view?usp=sharing)
 ### Horse to Zebra
 - [cyclegan_horse_to_horse.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing)
 ### Zebra to Horse
@@ -35,6 +39,10 @@ python3 generate_images.py\
 - https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo
 ### Photo to Vangogh
 - https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh
+### Ukiyo-e to Photo
+- https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo
+### Photo to Ukiyo-e
+- https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe
 ### Horse to Zebra
 - https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra
 ### Zebra to Horse
