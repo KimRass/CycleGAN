@@ -1,6 +1,6 @@
 # 'CycleGAN' (Zhu et al., 2017) implementation from scratch in PyTorch
 ## Paper Reading
-- [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593)
+- [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/unpaired_image_to_image_translation_using_cycle_consistent_adversarial_networks.pdf)
 ## How to Use
 ### Generating Images
 ```bash
@@ -22,7 +22,7 @@ python3 generate_images.py\
 | Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1CNrhdJSGe_xVDDcNyOedFtDYOmJ6qKZK/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
 | Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1YmnubmBV_inem0kDC5PhlVXY2Waw2IMo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
 | Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/10AzDkTrK-3czRzm37ebd8QVWZkJ8LlwO/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
-| Horse to Zebra | [cyclegan_horse_to_horse.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
+| Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
 | Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1-gA_F5r3YNV97lqMu_iby_Kx-INphEMT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
 ## Research
 ### Merging Optimizers
