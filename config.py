@@ -2,15 +2,13 @@ import torch.nn as nn
 from utils import get_device
 
 ### Data
-### Monet2Photo
 IMG_SIZE = 256
 X_MEAN = (0.5, 0.5, 0.5)
 X_STD = (0.5, 0.5, 0.5)
 Y_MEAN = (0.5, 0.5, 0.5)
 Y_STD = (0.5, 0.5, 0.5)
-FIXED_PAIRS = True
-# SCALE = (0.8, 1)
-SCALE = (1, 1)
+FIXED_PAIRS = False
+SCALE = (0.8, 1)
 
 ### Objective
 # "For $\mathcal{L}_{GAN}$, we replace the negative log likelihood objective by a least-squares loss. This loss
@@ -25,6 +23,8 @@ WARMUP_EPOCHS = 100
 ### Training
 DEVICE = get_device()
 LR = 0.0002 # "We train our networks from scratch, with a learning rate of 0.0002."
+BETA1 = 0.5
+BETA2 = 0.999
 CYCLE_LAMB = 10 # "We set $\lambda = 10$."
 # "The weight for the identity mapping loss was $0.5\lambda$ where $\lambda$ was the weight for cycle consistency
 # loss."

@@ -91,8 +91,13 @@ def get_models(device):
 
 def get_optims(disc_x, disc_y, gen_x, gen_y):
     # "We use the Adam solver."
-    disc_optim = Adam(list(disc_x.parameters()) + list(disc_y.parameters()), lr=config.LR)
-    gen_optim = Adam(list(gen_x.parameters()) + list(gen_y.parameters()), lr=config.LR)
+    # 논문에는 learning rate에 관한 얘기만 나오지만 공식 저장소를 그대로 따라 `betas=(0.5, 0.999)`를 설정했습니다. 
+    disc_optim = Adam(
+        list(disc_x.parameters()) + list(disc_y.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
+    )
+    gen_optim = Adam(
+        list(gen_x.parameters()) + list(gen_y.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
+    )
     return disc_optim, gen_optim
 
 
@@ -127,11 +132,9 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
         freeze_model(disc_x)
         freeze_model(disc_y)
 
-        # fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
         gen_x_gan_loss = config.GAN_CRIT(fake_y_pred, real_gt)
 
-        # fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = config.GAN_CRIT(fake_x_pred, real_gt)
 
@@ -141,7 +144,6 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
         fake_fake_x = gen_y(fake_y)
         forward_cycle_loss = config.CYCLE_CRIT(fake_fake_x, real_x)
 
-        # fake_x = gen_y(real_y)
         fake_fake_y = gen_x(fake_x)
         backward_cycle_loss = config.CYCLE_CRIT(fake_fake_y, real_y)
 
@@ -160,10 +162,10 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
 def _get_lr(epoch):
     # "We keep the same learning rate for the first 100 epochs and linearly decay the rate to zero
     # over the next 100 epochs."
-    if epoch < config.N_EPOCHS_BEFORE_DECAY:
+    if epoch < config.N_DECAY_EPOCHS:
         lr = config.LR
     else:
-        lr = - config.LR / (config.N_EPOCHS - config.N_EPOCHS_BEFORE_DECAY + 1) * (epoch - config.N_EPOCHS - 1)
+        lr = - config.LR / (config.N_EPOCHS - config.N_DECAY_EPOCHS + 1) * (epoch - config.N_EPOCHS - 1)
     return lr
 
 
@@ -309,8 +311,6 @@ if __name__ == "__main__":
 
             disc_loss = disc_y_loss + disc_x_loss
             disc_optim.zero_grad()
-            # scaler.scale(disc_y_loss).backward()
-            # scaler.scale(disc_x_loss).backward()
             scaler.scale(disc_loss).backward()
             scaler.step(disc_optim)
 
