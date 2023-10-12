@@ -162,10 +162,10 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
 def _get_lr(epoch):
     # "We keep the same learning rate for the first 100 epochs and linearly decay the rate to zero
     # over the next 100 epochs."
-    if epoch < config.N_DECAY_EPOCHS:
+    if epoch < config.N_EPOCHS_BEFORE_DECAY:
         lr = config.LR
     else:
-        lr = - config.LR / (config.N_EPOCHS - config.N_DECAY_EPOCHS + 1) * (epoch - config.N_EPOCHS - 1)
+        lr = - config.LR / (config.N_EPOCHS - config.N_EPOCHS_BEFORE_DECAY + 1) * (epoch - config.N_EPOCHS - 1)
     return lr
 
 

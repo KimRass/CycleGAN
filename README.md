@@ -13,40 +13,17 @@ python3 generate_images.py\
     --n_workers=1\
     --batch_size=4
 ```
-## Pre-trained Models
-### Monet to Photo
-- [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/18FpqtUzrCZA0hHXKhEJk_R0NkkQwiDYa/view?usp=sharing)
-### Photo to Monet
-- [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1MxJYDgIJ4JC5KmaKJ4902QDkq7PzRd19/view?usp=sharing)
-### Vangogh to Photo
-- [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1qdMDZ1IJWjVrIusboo5kPQeIVM08hdIo/view?usp=sharing)
-### Photo to Vangogh
-- [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1CNrhdJSGe_xVDDcNyOedFtDYOmJ6qKZK/view?usp=sharing)
-### Ukiyo-e to Photo
-- [cyclegan_ukiyoe_to_photo](https://drive.google.com/file/d/1YmnubmBV_inem0kDC5PhlVXY2Waw2IMo/view?usp=sharing)
-### Photo to Ukiyo-e
-- [cyclegan_photo_to_ukiyoe](https://drive.google.com/file/d/10AzDkTrK-3czRzm37ebd8QVWZkJ8LlwO/view?usp=sharing)
-### Horse to Zebra
-- [cyclegan_horse_to_horse.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing)
-### Zebra to Horse
-- [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1-gA_F5r3YNV97lqMu_iby_Kx-INphEMT/view?usp=sharing)
-## Generated Image Samples
-### Monet to Photo
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo
-### Photo to Monet
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet
-### Vangogh to Photo
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo
-### Photo to Vangogh
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh
-### Ukiyo-e to Photo
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo
-### Photo to Ukiyo-e
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe
-### Horse to Zebra
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra
-### Zebra to Horse
-- https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse
+## Pre-trained Models and Generated Images
+|  | Pre-trained model | Generated images on test set |
+| - | - | - |
+| Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/18FpqtUzrCZA0hHXKhEJk_R0NkkQwiDYa/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
+| Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1MxJYDgIJ4JC5KmaKJ4902QDkq7PzRd19/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
+| Vangogh to Photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1qdMDZ1IJWjVrIusboo5kPQeIVM08hdIo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
+| Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1CNrhdJSGe_xVDDcNyOedFtDYOmJ6qKZK/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
+| Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1YmnubmBV_inem0kDC5PhlVXY2Waw2IMo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
+| Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/10AzDkTrK-3czRzm37ebd8QVWZkJ8LlwO/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
+| Horse to Zebra | [cyclegan_horse_to_horse.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
+| Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1-gA_F5r3YNV97lqMu_iby_Kx-INphEMT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
 ## Research
 ### Merging Optimizers
 - - discriminators (Dx와 Dy)와 generators (Gx와 Gy)의 objective는 방향성이 서로 충돌하지만 (adversarial training) Dx와 Dy 그리고 Gx와 Gy는 서로 objective의 방향성이 동일하므로, Dx의 Optimizer와 Dy의 Optimizer를 하나로 합치고, Gx의 Optimizer와 Gy의 Optimizer를 하나로 합쳤습니다.
@@ -80,3 +57,5 @@ python3 generate_images.py\
         y_path = self.y_paths[idx]
         x_path = random.choice(self.x_paths)
     ```
+### LSGAN
+- 논문에서는 objective function으로 (`GAN_CRIT = nn.MSELoss()`)
