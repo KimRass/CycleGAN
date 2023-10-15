@@ -101,40 +101,16 @@ def get_optims(disc_x, disc_y, gen_x, gen_y):
     return disc_optim, gen_optim
 
 
-def get_disc_losses(
-    disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt, fake_gt, x_img_buffer, y_img_buffer,
-):
-    with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-        real_y_pred = disc_y(real_y)
-        real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
-        fake_y = gen_x(real_x)
-        past_fake_y = y_img_buffer(fake_y)
-        fake_y_pred = disc_y(past_fake_y.detach())
-        fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
-        # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
-        # relative to the rate of G."
-        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
-
-        real_x_pred = disc_x(real_x)
-        real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
-        fake_x = gen_y(real_y)
-        past_fake_x = x_img_buffer(fake_x)
-        fake_x_pred = disc_x(past_fake_x.detach())
-        fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
-        # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
-        # relative to the rate of G."
-        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
-    return fake_y, fake_x, disc_y_loss, disc_x_loss
-
-
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y, real_gt):
+def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
         freeze_model(disc_x)
         freeze_model(disc_y)
 
+        fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
         gen_x_gan_loss = config.GAN_CRIT(fake_y_pred, real_gt)
 
+        fake_x = gen_y(real_y)
         fake_x_pred = disc_x(fake_x)
         gen_y_gan_loss = config.GAN_CRIT(fake_x_pred, real_gt)
 
@@ -150,6 +126,8 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
         unfreeze_model(disc_x)
         unfreeze_model(disc_y)
     return (
+        fake_x,
+        fake_y,
         gen_x_gan_loss,
         gen_y_gan_loss,
         gen_x_id_loss,
@@ -157,6 +135,30 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, fake_x, fake_y,
         forward_cycle_loss,
         backward_cycle_loss,
     )
+
+
+def get_disc_losses(
+    disc_x, disc_y, real_x, real_y, real_gt, fake_gt, fake_x, fake_y, x_img_buffer, y_img_buffer,
+):
+    with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
+        real_y_pred = disc_y(real_y)
+        real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
+        past_fake_y = y_img_buffer(fake_y)
+        fake_y_pred = disc_y(past_fake_y.detach())
+        fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
+        # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
+        # relative to the rate of G."
+        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
+
+        real_x_pred = disc_x(real_x)
+        real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
+        past_fake_x = x_img_buffer(fake_x)
+        fake_x_pred = disc_x(past_fake_x.detach())
+        fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
+        # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
+        # relative to the rate of G."
+        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
+    return disc_y_loss, disc_x_loss
 
 
 def _get_lr(epoch):
@@ -295,30 +297,10 @@ if __name__ == "__main__":
             real_x = real_x.to(config.DEVICE)
             real_y = real_y.to(config.DEVICE)
 
-            ### Train Dx and Dy.
-            fake_y, fake_x, disc_y_loss, disc_x_loss = get_disc_losses(
-                disc_x=disc_x,
-                disc_y=disc_y,
-                gen_x=gen_x,
-                gen_y=gen_y,
-                real_x=real_x,
-                real_y=real_y,
-                real_gt=REAL_GT,
-                fake_gt=FAKE_GT,
-                x_img_buffer=x_img_buffer,
-                y_img_buffer=y_img_buffer,
-            )
-
-            disc_loss = disc_y_loss + disc_x_loss
-            disc_optim.zero_grad()
-            scaler.scale(disc_loss).backward()
-            scaler.step(disc_optim)
-
-            accum_disc_y_loss += disc_y_loss.item()
-            accum_disc_x_loss += disc_x_loss.item()
-
             ### Train Gx and Gy.
             (
+                fake_x,
+                fake_y,
                 gen_x_gan_loss,
                 gen_y_gan_loss,
                 gen_x_id_loss,
@@ -332,8 +314,6 @@ if __name__ == "__main__":
                 gen_y=gen_y,
                 real_x=real_x,
                 real_y=real_y,
-                fake_x=fake_x,
-                fake_y=fake_y,
                 real_gt=REAL_GT,
             )
             gen_loss = gen_x_gan_loss + gen_y_gan_loss
@@ -343,6 +323,28 @@ if __name__ == "__main__":
             gen_optim.zero_grad()
             scaler.scale(gen_loss).backward()
             scaler.step(gen_optim)
+
+            ### Train Dx and Dy.
+            disc_y_loss, disc_x_loss = get_disc_losses(
+                disc_x=disc_x,
+                disc_y=disc_y,
+                real_x=real_x,
+                real_y=real_y,
+                real_gt=REAL_GT,
+                fake_gt=FAKE_GT,
+                fake_x=fake_x,
+                fake_y=fake_y,
+                x_img_buffer=x_img_buffer,
+                y_img_buffer=y_img_buffer,
+            )
+
+            disc_loss = disc_y_loss + disc_x_loss
+            disc_optim.zero_grad()
+            scaler.scale(disc_loss).backward()
+            scaler.step(disc_optim)
+
+            accum_disc_y_loss += disc_y_loss.item()
+            accum_disc_x_loss += disc_x_loss.item()
 
             scaler.update()
 
