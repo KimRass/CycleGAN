@@ -76,14 +76,10 @@ def get_elapsed_time(start_time):
     return timedelta(seconds=round(time() - start_time))
 
 
-def freeze_model(model):
-    for p in model.parameters():
-        p.requires_grad = False
-
-
-def unfreeze_model(model):
-    for p in model.parameters():
-        p.requires_grad = True
+def set_requires_grad(models, grad):
+    for model in models:
+        for p in model.parameters():
+            p.requires_grad = grad
 
 
 class ImageBuffer(object):

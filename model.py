@@ -187,30 +187,7 @@ class Discriminator(nn.Module):
 if __name__ == "__main__":
     img_size = 256
     x = torch.randn(2, 3, img_size, img_size)
-    gen = Generator()
+    # gen = Generator()
     disc = Discriminator()
     out = disc(x)
     out.shape
-    
-    out = gen(x)
-    out.shape
-
-    # x = torch.randn(1, 1, 3, 4)
-    # pad = nn.ReflectionPad2d(2)
-    # conv1 = nn.Conv2d(1, 1, kernel_size=2)
-    # conv2 = nn.Conv2d(1, 1, kernel_size=2, padding=2, padding_mode="reflect")
-    # conv2.weight.data = conv1.weight.data
-    # conv2.bias.data = conv1.bias.data
-
-    # torch.equal(conv1(pad(x)), conv2(x))
-
-    x = torch.randn(1, 4, 3, 4)
-    conv1 = nn.Conv2d(4, 4, kernel_size=2, bias=True)
-    conv2 = nn.Conv2d(4, 4, kernel_size=2, bias=False)
-    conv2.weight.data = conv1.weight.data
-    # conv2.bias.data = conv1.bias.data
-    norm = nn.InstanceNorm2d(4)
-
-    torch.equal(norm(conv1(x)), norm(conv2(x)))
-    norm(conv1(x))
-    norm(conv2(x))

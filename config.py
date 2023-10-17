@@ -7,6 +7,7 @@ X_MEAN = (0.5, 0.5, 0.5)
 X_STD = (0.5, 0.5, 0.5)
 Y_MEAN = (0.5, 0.5, 0.5)
 Y_STD = (0.5, 0.5, 0.5)
+FIXED_PAIRS = False
 SCALE = (0.8, 1)
 
 ### Objective
@@ -17,6 +18,7 @@ CYCLE_CRIT = nn.L1Loss()
 ID_CRIT = nn.L1Loss()
 
 ### Training
+SEED = 124
 DEVICE = get_device()
 LR = 0.0002 # "We train our networks from scratch, with a learning rate of 0.0002."
 BETA1 = 0.5

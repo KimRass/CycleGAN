@@ -16,8 +16,7 @@ from utils import (
     images_to_grid,
     save_image,
     get_elapsed_time,
-    freeze_model,
-    unfreeze_model,
+    set_requires_grad,
     ImageBuffer,
 )
 
@@ -27,7 +26,7 @@ def get_args():
 
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
-    parser.add_argument("--fixed_pairs", action="store_true")
+    # parser.add_argument("--fixed_pairs", action="store_true")
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     # "We use the Adam solver with a batch size of 1."
@@ -48,6 +47,15 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
         split="train",
         fixed_pairs=fixed_pairs,
     )
+    train_dl = DataLoader(
+        train_ds,
+        batch_size=train_batch_size,
+        shuffle=True,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=True,
+    )
+
     test_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
@@ -56,15 +64,6 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
         y_std=config.Y_STD,
         split="test",
         fixed_pairs=True,
-    )
-
-    train_dl = DataLoader(
-        train_ds,
-        batch_size=train_batch_size,
-        shuffle=True,
-        num_workers=n_cpus,
-        pin_memory=True,
-        drop_last=True,
     )
     test_dl = DataLoader(
         test_ds,
@@ -104,9 +103,6 @@ def get_optims(disc_x, disc_y, gen_x, gen_y):
 
 def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-        freeze_model(disc_x)
-        freeze_model(disc_y)
-
         fake_y = gen_x(real_x)
         fake_y_pred = disc_y(fake_y)
         gen_x_gan_loss = config.GAN_CRIT(fake_y_pred, real_gt)
@@ -123,9 +119,6 @@ def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt):
 
         fake_fake_y = gen_x(fake_x)
         backward_cycle_loss = config.CYCLE_CRIT(fake_fake_y, real_y)
-
-        unfreeze_model(disc_x)
-        unfreeze_model(disc_y)
     return (
         fake_x,
         fake_y,
@@ -185,10 +178,10 @@ def update_lrs(
 def generate_samples(gen_x, gen_y, real_x, real_y):
     gen_x.eval()
     with torch.no_grad():
-        test_fake_y = gen_x(real_x)
+        fake_y = gen_x(real_x)
     grid_xy = images_to_grid(
-        x=test_real_x,
-        y=test_fake_y,
+        x=real_x,
+        y=fake_y,
         x_mean=config.X_MEAN,
         x_std=config.X_STD,
         y_mean=config.Y_MEAN,
@@ -198,10 +191,10 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
 
     gen_y.eval()
     with torch.no_grad():
-        test_fake_x = gen_y(real_y)
+        fake_x = gen_y(real_y)
     grid_yx = images_to_grid(
-        x=test_real_y,
-        y=test_fake_x,
+        x=real_y,
+        y=fake_x,
         x_mean=config.X_MEAN,
         x_std=config.X_STD,
         y_mean=config.Y_MEAN,
@@ -235,13 +228,20 @@ if __name__ == "__main__":
 
     args = get_args()
 
+    REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
+    FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
+
     train_dl, test_dl = get_dl(
         data_dir=args.data_dir,
         train_batch_size=args.train_batch_size,
         test_batch_size=args.test_batch_size,
         n_cpus=args.n_cpus,
-        fixed_pairs=args.fixed_pairs,
+        # fixed_pairs=args.fixed_pairs,
+        fixed_pairs=config.FIXED_PAIRS,
     )
+    TEST_REAL_X, TEST_REAL_Y = next(iter(test_dl))
+    TEST_REAL_X = TEST_REAL_X.to(config.DEVICE)
+    TEST_REAL_Y = TEST_REAL_Y.to(config.DEVICE)
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
@@ -250,13 +250,6 @@ if __name__ == "__main__":
     scaler = GradScaler()
 
     ### Train.
-    REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
-    FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
-
-    test_real_x, test_real_y = next(iter(test_dl))
-    test_real_x = test_real_x.to(config.DEVICE)
-    test_real_y = test_real_y.to(config.DEVICE)
-
     x_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
@@ -322,14 +315,20 @@ if __name__ == "__main__":
             gen_loss += config.ID_LAMB * (gen_x_id_loss + gen_y_id_loss)
             gen_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
 
+            set_requires_grad(models=[disc_x, disc_y], grad=False) # Freeze Ds
+
             gen_optim.zero_grad()
             scaler.scale(gen_loss).backward()
             scaler.step(gen_optim)
 
+            set_requires_grad(models=[disc_x, disc_y], grad=True)
+            print([p.requires_grad for p in disc_x.parameters()])
+            print(disc_x.conv_block1.conv.weight.data.sum())
+
             accum_gen_x_gan_loss += gen_x_gan_loss.item()
             accum_gen_y_gan_loss += gen_y_gan_loss.item()
-            accum_gen_x_id_loss  += gen_x_id_loss.item()
-            accum_gen_y_id_loss  += gen_y_id_loss.item()
+            accum_gen_x_id_loss += gen_x_id_loss.item()
+            accum_gen_y_id_loss += gen_y_id_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
 
@@ -347,9 +346,9 @@ if __name__ == "__main__":
                 y_img_buffer=y_img_buffer,
             )
 
-            disc_loss = disc_y_loss + disc_x_loss
             disc_optim.zero_grad()
-            scaler.scale(disc_loss).backward()
+            scaler.scale(disc_y_loss).backward()
+            scaler.scale(disc_x_loss).backward()
             scaler.step(disc_optim)
 
             accum_disc_y_loss += disc_y_loss.item()
@@ -372,7 +371,7 @@ if __name__ == "__main__":
         ### Generate samples.
         if epoch % config.GEN_SAMPLES_EVERY == 0:
             grid_xy, grid_yx = generate_samples(
-                gen_x=gen_x, gen_y=gen_y, real_x=test_real_x, real_y=test_real_y,
+                gen_x=gen_x, gen_y=gen_y, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
             )
             save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_forward.jpg")
             save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_backward.jpg")
