@@ -27,6 +27,7 @@ def get_args():
 
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--fixed_pairs", action="store_true")
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     # "We use the Adam solver with a batch size of 1."
@@ -37,7 +38,7 @@ def get_args():
     return args
 
 
-def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus):
+def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
     train_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
@@ -45,7 +46,7 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus):
         y_mean=config.Y_MEAN,
         y_std=config.Y_STD,
         split="train",
-        fixed_pairs=config.FIXED_PAIRS,
+        fixed_pairs=fixed_pairs,
     )
     test_ds = UnpairedImageDataset(
         data_dir=data_dir,
@@ -239,6 +240,7 @@ if __name__ == "__main__":
         train_batch_size=args.train_batch_size,
         test_batch_size=args.test_batch_size,
         n_cpus=args.n_cpus,
+        fixed_pairs=args.fixed_pairs,
     )
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
