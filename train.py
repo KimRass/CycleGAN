@@ -316,16 +316,12 @@ if __name__ == "__main__":
             gen_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
 
             set_requires_grad(models=[disc_x, disc_y], grad=False) # Freeze Ds
-            print([p.requires_grad for p in disc_x.parameters()])
-            print(disc_x.conv_block1.conv.weight.data.sum())
 
             gen_optim.zero_grad()
             scaler.scale(gen_loss).backward()
             scaler.step(gen_optim)
 
             set_requires_grad(models=[disc_x, disc_y], grad=True)
-            print([p.requires_grad for p in disc_x.parameters()])
-            print(disc_x.conv_block1.conv.weight.data.sum(), end="\n\n")
 
             accum_gen_x_gan_loss += gen_x_gan_loss.item()
             accum_gen_y_gan_loss += gen_y_gan_loss.item()
