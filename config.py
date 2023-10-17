@@ -17,9 +17,6 @@ GAN_CRIT = nn.MSELoss()
 CYCLE_CRIT = nn.L1Loss()
 ID_CRIT = nn.L1Loss()
 
-### Optimizer
-WARMUP_EPOCHS = 100
-
 ### Training
 DEVICE = get_device()
 LR = 0.0002 # "We train our networks from scratch, with a learning rate of 0.0002."
