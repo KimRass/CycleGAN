@@ -326,6 +326,13 @@ if __name__ == "__main__":
             scaler.scale(gen_loss).backward()
             scaler.step(gen_optim)
 
+            accum_gen_x_gan_loss += gen_x_gan_loss.item()
+            accum_gen_y_gan_loss += gen_y_gan_loss.item()
+            accum_gen_x_id_loss  += gen_x_id_loss.item()
+            accum_gen_y_id_loss  += gen_y_id_loss.item()
+            accum_forward_cycle_loss += forward_cycle_loss.item()
+            accum_backward_cycle_loss += backward_cycle_loss.item()
+
             ### Train Dx and Dy.
             disc_y_loss, disc_x_loss = get_disc_losses(
                 disc_x=disc_x,
@@ -349,13 +356,6 @@ if __name__ == "__main__":
             accum_disc_x_loss += disc_x_loss.item()
 
             scaler.update()
-
-            accum_gen_x_gan_loss += gen_x_gan_loss.item()
-            accum_gen_y_gan_loss += gen_y_gan_loss.item()
-            accum_gen_x_id_loss  += gen_x_id_loss.item()
-            accum_gen_y_id_loss  += gen_y_id_loss.item()
-            accum_forward_cycle_loss += forward_cycle_loss.item()
-            accum_backward_cycle_loss += backward_cycle_loss.item()
 
         msg = f"[ {epoch}/{config.N_EPOCHS} ]"
         msg += f"[ {get_elapsed_time(start_time)} ]"
