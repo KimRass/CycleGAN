@@ -176,6 +176,7 @@ def update_lrs(
     lr = _get_lr(epoch)
     disc_optim.param_groups[0]["lr"] = lr
     gen_optim.param_groups[0]["lr"] = lr
+    return lr
 
 
 def generate_samples(gen_x, gen_y, real_x, real_y):
@@ -281,7 +282,7 @@ if __name__ == "__main__":
         init_epoch = 0
 
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
-        update_lrs(
+        lr = update_lrs(
             disc_optim=disc_optim,
             gen_optim=gen_optim,
             epoch=epoch,
@@ -364,7 +365,7 @@ if __name__ == "__main__":
             scaler.update()
 
         msg = f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"[ {str(get_elapsed_time(start_time))} ]"
         msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
         msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
         msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
@@ -377,6 +378,7 @@ if __name__ == "__main__":
 
         wandb.log({
             "Epoch": epoch,
+            "Learning rate": lr,
             "Elapsed time": get_elapsed_time(start_time),
             "Dy loss": accum_disc_y_loss / len(train_dl),
             "Dx loss": accum_disc_x_loss / len(train_dl),
