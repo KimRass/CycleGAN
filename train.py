@@ -365,7 +365,7 @@ if __name__ == "__main__":
             scaler.update()
 
         msg = f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"[ {str(get_elapsed_time(start_time))} ]"
+        msg += f"[ {get_elapsed_time(start_time)} ]"
         msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
         msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
         msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
@@ -379,7 +379,7 @@ if __name__ == "__main__":
         wandb.log({
             "Epoch": epoch,
             "Learning rate": lr,
-            "Elapsed time": get_elapsed_time(start_time),
+            "Elapsed time": str(get_elapsed_time(start_time)),
             "Dy loss": accum_disc_y_loss / len(train_dl),
             "Dx loss": accum_disc_x_loss / len(train_dl),
             "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
