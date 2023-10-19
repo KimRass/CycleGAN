@@ -8,6 +8,7 @@ from torch.cuda.amp import GradScaler
 from pathlib import Path
 import argparse
 from time import time
+import wandb
 
 import config
 from model import Generator, Discriminator
@@ -19,6 +20,8 @@ from utils import (
     set_requires_grad,
     ImageBuffer,
 )
+
+wandb.init(project="CycleGAN")
 
 
 def get_args():
@@ -179,7 +182,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
     gen_x.eval()
     with torch.no_grad():
         fake_y = gen_x(real_x)
-    grid_xy = images_to_grid(
+    forward_grid = images_to_grid(
         x=real_x,
         y=fake_y,
         x_mean=config.X_MEAN,
@@ -192,7 +195,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
     gen_y.eval()
     with torch.no_grad():
         fake_x = gen_y(real_y)
-    grid_yx = images_to_grid(
+    backward_grid = images_to_grid(
         x=real_y,
         y=fake_x,
         x_mean=config.X_MEAN,
@@ -201,7 +204,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
         y_std=config.Y_STD,
     )
     gen_y.train()
-    return grid_xy, grid_yx
+    return forward_grid, backward_grid
 
 
 def save_checkpoint(
@@ -225,8 +228,16 @@ def save_checkpoint(
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
+    SAMPLES_DIR = f"{PARENT_DIR}/samples"
+    CKPTS_DIR = f"{PARENT_DIR}/checkpoints"
 
     args = get_args()
+
+    wandb.config.update({
+        "seed": config.SEED,
+        "dataset_name": args.ds_name,
+        "fixed_pairs": config.FIXED_PAIRS,
+    })
 
     REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
     FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
@@ -236,7 +247,6 @@ if __name__ == "__main__":
         train_batch_size=args.train_batch_size,
         test_batch_size=args.test_batch_size,
         n_cpus=args.n_cpus,
-        # fixed_pairs=args.fixed_pairs,
         fixed_pairs=config.FIXED_PAIRS,
     )
     TEST_REAL_X, TEST_REAL_Y = next(iter(test_dl))
@@ -268,7 +278,6 @@ if __name__ == "__main__":
         y_img_buffer.stored_images = state_dict["stored_y_images"]
         print(f"Resume from checkpoint '{args.resume_from}'.")
     else:
-        prev_ckpt_path = ".pth"
         init_epoch = 0
 
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
@@ -366,17 +375,36 @@ if __name__ == "__main__":
         msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
         print(msg)
 
+        wandb.log({
+            "Epoch": epoch,
+            "Elapsed time": get_elapsed_time(start_time),
+            "Dy loss": accum_disc_y_loss / len(train_dl),
+            "Dx loss": accum_disc_x_loss / len(train_dl),
+            "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
+            "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
+            "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
+            "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
+            "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
+            "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
+        })
+
         ### Generate samples.
         if epoch % config.GEN_SAMPLES_EVERY == 0:
-            grid_xy, grid_yx = generate_samples(
+            forward_grid, backward_grid = generate_samples(
                 gen_x=gen_x, gen_y=gen_y, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
             )
-            save_image(grid_xy, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_forward.jpg")
-            save_image(grid_yx, path=f"{PARENT_DIR}/samples/{args.ds_name}/epoch_{epoch}_backward.jpg")
+            forward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/forward_epoch_{epoch}.jpg"
+            backward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/backward_epoch_{epoch}.jpg"
+            save_image(forward_grid, path=forward_save_path)
+            save_image(backward_grid, path=backward_save_path)
+            wandb.log({
+                "Epoch": epoch,
+                "Generated images from test set (forward)": wandb.Image(forward_save_path),
+                "Generated images from test set (backward)": wandb.Image(backward_save_path),
+            })
 
         ### Save checkpoint.
         if epoch % config.SAVE_CKPT_EVERY == 0:
-            ckpt_path = f"{PARENT_DIR}/checkpoints/{args.ds_name}/epoch_{epoch}.pth"
             save_checkpoint(
                 epoch=epoch,
                 disc_x=disc_x,
@@ -388,5 +416,5 @@ if __name__ == "__main__":
                 scaler=scaler,
                 x_img_buffer=x_img_buffer,
                 y_img_buffer=y_img_buffer,
-                save_path=ckpt_path,
+                save_path=f"{CKPTS_DIR}/{args.ds_name}/epoch_{epoch}.pth",
             )
