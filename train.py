@@ -21,15 +21,12 @@ from utils import (
     ImageBuffer,
 )
 
-wandb.init(project="CycleGAN")
-
 
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
-    # parser.add_argument("--fixed_pairs", action="store_true")
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     # "We use the Adam solver with a batch size of 1."
@@ -234,11 +231,12 @@ if __name__ == "__main__":
 
     args = get_args()
 
+    wandb.init(project="CycleGAN")
     wandb.config.update({
         "seed": config.SEED,
-        "dataset_name": args.ds_name,
         "fixed_pairs": config.FIXED_PAIRS,
     })
+    wandb.config.update(args)
 
     REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
     FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
@@ -376,19 +374,22 @@ if __name__ == "__main__":
         msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
         print(msg)
 
-        wandb.log({
-            "Epoch": epoch,
-            "Learning rate": lr,
-            "Elapsed time": str(get_elapsed_time(start_time)),
-            "Dy loss": accum_disc_y_loss / len(train_dl),
-            "Dx loss": accum_disc_x_loss / len(train_dl),
-            "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
-            "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
-            "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
-            "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
-            "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
-            "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
-        })
+        wandb.log(
+            {
+                "Epoch": epoch,
+                "Learning rate": lr,
+                "Elapsed time": str(get_elapsed_time(start_time)),
+                "Dy loss": accum_disc_y_loss / len(train_dl),
+                "Dx loss": accum_disc_x_loss / len(train_dl),
+                "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
+                "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
+                "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
+                "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
+                "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
+                "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
+            },
+            commit=False,
+        )
 
         ### Generate samples.
         if epoch % config.GEN_SAMPLES_EVERY == 0:
@@ -399,11 +400,12 @@ if __name__ == "__main__":
             backward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/backward_epoch_{epoch}.jpg"
             save_image(forward_grid, path=forward_save_path)
             save_image(backward_grid, path=backward_save_path)
-            wandb.log({
-                "Epoch": epoch,
-                "Generated images from test set (forward)": wandb.Image(forward_save_path),
-                "Generated images from test set (backward)": wandb.Image(backward_save_path),
-            })
+            wandb.log(
+                {
+                    "Generated images from test set (forward)": wandb.Image(forward_save_path),
+                    "Generated images from test set (backward)": wandb.Image(backward_save_path),
+                }
+            )
 
         ### Save checkpoint.
         if epoch % config.SAVE_CKPT_EVERY == 0:
