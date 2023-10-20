@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--x_or_y", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
-    parser.add_argument("--n_workers", type=int, required=True)
+    parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--batch_size", type=int, required=True)
 
     args = parser.parse_args()
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         test_ds,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=args.n_workers,
+        num_workers=args.n_cpus,
         pin_memory=False,
         drop_last=False,
     )
