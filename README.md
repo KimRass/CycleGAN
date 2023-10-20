@@ -31,41 +31,32 @@ python3 generate_images.py\
 | Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
 | Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
 | Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1-gA_F5r3YNV97lqMu_iby_Kx-INphEMT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
-
-### Some Success Cases
-<details>
-<summary>펼치기 / 접기</summary>
-
-#### Monet to Photo
+### Monet to Photo
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/e7a9a65e-28d0-49e3-befa-5d6d38121276" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/b035ea97-7026-4953-b2df-1a5c70849501" width="500">
-#### Photo to Monet
+### Photo to Monet
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/4931f46b-3289-4da2-87fe-6a42ffe3c5ab" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/b15db5b1-99d2-41ea-a47b-4ed1a210b034" width="500">
-#### Vangogh to Photo
+### Vangogh to Photo
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/4fb3fe43-348a-4c33-91c1-7b8aec06a4c5" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/19f20bab-a806-4479-a83a-6a7dc05f9b8d" width="500">
-#### Photo to Vangogh
+### Photo to Vangogh
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/5b25f493-fe90-4ca9-8bf0-b605bd109644" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/b258bfd9-17d9-4042-a4c2-2d5ce9ce6b15" width="500">
-<!-- #### Ukiyoe to Photo
-- <img src="" width="500">
-- <img src="" width="500"> -->
-#### Photo to Ukiyoe
+### Ukiyoe to Photo
+### Photo to Ukiyoe
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/9ec58775-01ce-438f-8c74-1304f84b62c4" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/8a65401f-3d59-4e9f-91b8-f3b8060c511a" width="500">
-#### Horse to Zebra
+### Horse to Zebra
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/cf001a04-8019-4099-bcf0-759f56f61291" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/794003e9-bf04-458e-9d23-31c4654b3909" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/7f222da0-b364-455d-b7e6-ddb849ed3f7c" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/d580a23c-0730-4b5b-bb05-b3c8cbc4a93e" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/678f546f-9a4e-493f-b6d1-d02fb4b7d533" width="500">
-#### Zebra to Horse
+### Zebra to Horse
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/91c2a91e-3460-4186-ac43-7f8283617826" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/dd401699-adf2-4b86-95d0-8d8b1a9218e0" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/3f6c7df9-e47e-4717-b85c-dadea93e281e" width="500">
-</details>
-
 ## Research
 ### Merging Optimizers
 - - discriminators (Dx와 Dy)와 generators (Gx와 Gy)의 objective는 방향성이 서로 충돌하지만 (adversarial training) Dx와 Dy 그리고 Gx와 Gy는 서로 objective의 방향성이 동일하므로, Dx의 Optimizer와 Dy의 Optimizer를 하나로 합치고, Gx의 Optimizer와 Gy의 Optimizer를 하나로 합쳤습니다.

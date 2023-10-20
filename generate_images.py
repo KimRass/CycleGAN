@@ -81,5 +81,5 @@ if __name__ == "__main__":
             y_std=config.Y_STD,
         )
         save_image(
-            grid, path=f"{PARENT_DIR}/generated_images/{DIR_NAME}/{idx}.jpg",
+            grid, path=f"{PARENT_DIR}/generated_images/{DIR_NAME}/{str(idx).zfill(3)}.jpg",
         )
