@@ -253,8 +253,8 @@ if __name__ == "__main__":
 
     wandb.init(project="CycleGAN")
     wandb.config.update({
-        "seed": config.SEED,
-        "fixed_pairs": config.FIXED_PAIRS,
+        "Seed": config.SEED,
+        "Fixed pairs": config.FIXED_PAIRS,
     })
     wandb.config.update(args)
 
