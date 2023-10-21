@@ -406,7 +406,6 @@ if __name__ == "__main__":
                 "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
             },
             epoch=epoch,
-            commit=False,
         )
 
         ### Generate samples.
