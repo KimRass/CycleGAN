@@ -15,7 +15,7 @@ def get_args():
 
     parser.add_argument("--ds_name", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
-    parser.add_argument("--direction", type=str, required=True)
+    parser.add_argument("--x_or_y", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--batch_size", type=int, required=True)
@@ -32,9 +32,9 @@ def _ls_to_str(ls):
     return "_to_".join(ls)
 
 
-def get_dir_name(ds_name, direction):
+def get_dir_name(ds_name, x_or_y):
     ls = _df_name_to_ls(ds_name)
-    if direction == "backward":
+    if x_or_y == "y":
         ls = reversed(ls)
     dir_name = _ls_to_str(ls)
     return dir_name
@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     args = get_args()
 
-    DIR_NAME = get_dir_name(ds_name=args.ds_name, direction=args.direction)
+    DIR_NAME = get_dir_name(ds_name=args.ds_name, x_or_y=args.x_or_y)
 
     gen = Generator().to(config.DEVICE)
     ckpt = torch.load(args.ckpt_path, map_location=config.DEVICE)
@@ -53,9 +53,9 @@ if __name__ == "__main__":
 
     test_ds = OneSideImageDataset(
         data_dir=args.data_dir,
-        direction=args.direction,
-        mean=config.X_MEAN if args.direction == "x" else config.Y_MEAN,
-        std=config.X_STD if args.direction == "x" else config.Y_STD,
+        x_or_y=args.x_or_y,
+        mean=config.X_MEAN if args.x_or_y == "x" else config.Y_MEAN,
+        std=config.X_STD if args.x_or_y == "x" else config.Y_STD,
         split="test",
     )
     test_dl = DataLoader(

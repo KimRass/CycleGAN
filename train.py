@@ -54,15 +54,6 @@ def get_dls(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
         drop_last=True,
     )
 
-    # test_ds = UnpairedImageDataset(
-    #     data_dir=data_dir,
-    #     x_mean=config.X_MEAN,
-    #     x_std=config.X_STD,
-    #     y_mean=config.Y_MEAN,
-    #     y_std=config.Y_STD,
-    #     split="test",
-    #     fixed_pairs=True,
-    # )
     x_test_ds = OneSideImageDataset(
         data_dir=data_dir,
         x_or_y="x",

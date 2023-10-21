@@ -15,7 +15,7 @@ python3 checkpoint.py\
 python3 generate_images.py\
     --ds_name="monet2photo"\
     --data_dir=".../monet2photo/"\
-    --direction="forward"\ # or `"backward"`
+    --x_or_y="x"\
     --ckpt_path=".../monet_to_photo.pth"\
     --n_cpus=1\
     --batch_size=4
