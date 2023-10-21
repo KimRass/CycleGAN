@@ -373,8 +373,8 @@ if __name__ == "__main__":
 
             scaler.update()
 
-        msg = f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"[ {get_elapsed_time(start_time)} ]"
+        msg = f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"[ {epoch}/{config.N_EPOCHS} ]"
         msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
         msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
         msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
