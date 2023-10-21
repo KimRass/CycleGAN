@@ -80,21 +80,21 @@ class OneSideImageDataset(Dataset):
     def __init__(
         self,
         data_dir,
-        x_or_y,
+        direction,
         mean,
         std,
         split="train",
     ):
         super().__init__()
 
-        self.x_or_y = x_or_y
+        self.direction = direction
         self.mean = mean
         self.std = std
         self.split = split
 
-        if x_or_y == "x":
+        if direction == "forward":
             self.paths = list(Path(data_dir).glob(f"""{split}A/*.jpg"""))
-        elif x_or_y == "y":
+        elif direction == "backward":
             self.paths = list(Path(data_dir).glob(f"""{split}B/*.jpg"""))
 
     def transform(self, image):

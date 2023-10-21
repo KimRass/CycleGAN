@@ -20,6 +20,7 @@ ID_CRIT = nn.L1Loss()
 ### Training
 SEED = 124
 DEVICE = get_device()
+TRAIN_BATCH_SIZE = 1 # "We use the Adam solver with a batch size of 1."
 LR = 0.0002 # "We train our networks from scratch, with a learning rate of 0.0002."
 BETA1 = 0.5
 BETA2 = 0.999

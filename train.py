@@ -12,7 +12,7 @@ import wandb
 
 import config
 from model import Generator, Discriminator
-from dataset import UnpairedImageDataset
+from dataset import UnpairedImageDataset, OneSideImageDataset
 from utils import (
     images_to_grid,
     save_image,
@@ -29,15 +29,13 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
-    # "We use the Adam solver with a batch size of 1."
-    parser.add_argument("--train_batch_size", type=int, required=False, default=1)
     parser.add_argument("--resume_from", type=str, required=False)
 
     args = parser.parse_args()
     return args
 
 
-def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
+def get_dls(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
     train_ds = UnpairedImageDataset(
         data_dir=data_dir,
         x_mean=config.X_MEAN,
@@ -56,24 +54,47 @@ def get_dl(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
         drop_last=True,
     )
 
-    test_ds = UnpairedImageDataset(
+    # test_ds = UnpairedImageDataset(
+    #     data_dir=data_dir,
+    #     x_mean=config.X_MEAN,
+    #     x_std=config.X_STD,
+    #     y_mean=config.Y_MEAN,
+    #     y_std=config.Y_STD,
+    #     split="test",
+    #     fixed_pairs=True,
+    # )
+    x_test_ds = OneSideImageDataset(
         data_dir=data_dir,
-        x_mean=config.X_MEAN,
-        x_std=config.X_STD,
-        y_mean=config.Y_MEAN,
-        y_std=config.Y_STD,
+        x_or_y="x",
+        mean=config.X_MEAN,
+        std=config.X_STD,
         split="test",
-        fixed_pairs=True,
     )
-    test_dl = DataLoader(
-        test_ds,
+    x_test_dl = DataLoader(
+        x_test_ds,
         batch_size=test_batch_size,
         shuffle=True,
         num_workers=n_cpus,
         pin_memory=True,
         drop_last=False,
     )
-    return train_dl, test_dl
+
+    y_test_ds = OneSideImageDataset(
+        data_dir=data_dir,
+        x_or_y="y",
+        mean=config.Y_MEAN,
+        std=config.Y_STD,
+        split="test",
+    )
+    y_test_dl = DataLoader(
+        y_test_ds,
+        batch_size=test_batch_size,
+        shuffle=True,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=False,
+    )
+    return train_dl, x_test_dl, y_test_dl
 
 
 def get_models(device):
@@ -237,19 +258,18 @@ if __name__ == "__main__":
     })
     wandb.config.update(args)
 
-    REAL_GT = torch.ones(size=(args.train_batch_size, 1), device=config.DEVICE)
-    FAKE_GT = torch.zeros(size=(args.train_batch_size, 1), device=config.DEVICE)
+    REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
+    FAKE_GT = torch.zeros(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
 
-    train_dl, test_dl = get_dl(
+    train_dl, x_test_dl, y_test_dl = get_dls(
         data_dir=args.data_dir,
-        train_batch_size=args.train_batch_size,
+        train_batch_size=config.TRAIN_BATCH_SIZE,
         test_batch_size=args.test_batch_size,
         n_cpus=args.n_cpus,
         fixed_pairs=config.FIXED_PAIRS,
     )
-    TEST_REAL_X, TEST_REAL_Y = next(iter(test_dl))
-    TEST_REAL_X = TEST_REAL_X.to(config.DEVICE)
-    TEST_REAL_Y = TEST_REAL_Y.to(config.DEVICE)
+    TEST_REAL_X = next(iter(x_test_dl)).to(config.DEVICE)
+    TEST_REAL_Y = next(iter(y_test_dl)).to(config.DEVICE)
 
     disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
 
@@ -375,9 +395,7 @@ if __name__ == "__main__":
 
         wandb.log(
             {
-                "Epoch": epoch,
                 "Learning rate": disc_optim.param_groups[0]["lr"],
-                # "Elapsed time": str(get_elapsed_time(start_time)),
                 "Dy loss": accum_disc_y_loss / len(train_dl),
                 "Dx loss": accum_disc_x_loss / len(train_dl),
                 "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
@@ -387,6 +405,7 @@ if __name__ == "__main__":
                 "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
                 "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
             },
+            epoch=epoch,
             commit=False,
         )
 
@@ -403,7 +422,8 @@ if __name__ == "__main__":
                 {
                     "Generated images from test set (forward)": wandb.Image(forward_save_path),
                     "Generated images from test set (backward)": wandb.Image(backward_save_path),
-                }
+                },
+                epoch=epoch,
             )
 
         ### Save checkpoint.

@@ -15,7 +15,7 @@ python3 checkpoint.py\
 python3 generate_images.py\
     --ds_name="monet2photo"\
     --data_dir=".../monet2photo/"\
-    --x_or_y="x"\
+    --direction="forward"\ # or `"backward"`
     --ckpt_path=".../monet_to_photo.pth"\
     --n_cpus=1\
     --batch_size=4
@@ -25,8 +25,8 @@ python3 generate_images.py\
 | - | - | - |
 | Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/18FpqtUzrCZA0hHXKhEJk_R0NkkQwiDYa/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
 | Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1MxJYDgIJ4JC5KmaKJ4902QDkq7PzRd19/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
-| Vangogh to Photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1qdMDZ1IJWjVrIusboo5kPQeIVM08hdIo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
-| Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1CNrhdJSGe_xVDDcNyOedFtDYOmJ6qKZK/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
+| Vangogh to Photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1tIktlGXTwPZGb-Zu7y-MSWWO304FivaB/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
+| Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
 | Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
 | Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
 | Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
@@ -57,7 +57,7 @@ python3 generate_images.py\
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/91c2a91e-3460-4186-ac43-7f8283617826" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/dd401699-adf2-4b86-95d0-8d8b1a9218e0" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/3f6c7df9-e47e-4717-b85c-dadea93e281e" width="500">
-## Research
+## Implementation Details
 ### Merging Optimizers
 - - discriminators (Dx와 Dy)와 generators (Gx와 Gy)의 objective는 방향성이 서로 충돌하지만 (adversarial training) Dx와 Dy 그리고 Gx와 Gy는 서로 objective의 방향성이 동일하므로, Dx의 Optimizer와 Dy의 Optimizer를 하나로 합치고, Gx의 Optimizer와 Gy의 Optimizer를 하나로 합쳤습니다.
 - As-is:
