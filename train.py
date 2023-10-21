@@ -248,6 +248,7 @@ if __name__ == "__main__":
         "Fixed pairs": config.FIXED_PAIRS,
     })
     wandb.config.update(args)
+    print(wandb.config)
 
     REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
     FAKE_GT = torch.zeros(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
