@@ -397,7 +397,7 @@ if __name__ == "__main__":
                 "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
                 "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
             },
-            epoch=epoch,
+            step=epoch,
         )
 
         ### Generate samples.
@@ -414,7 +414,7 @@ if __name__ == "__main__":
                     "Generated images from test set (forward)": wandb.Image(forward_save_path),
                     "Generated images from test set (backward)": wandb.Image(backward_save_path),
                 },
-                epoch=epoch,
+                step=epoch,
             )
 
         ### Save checkpoint.
