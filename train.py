@@ -30,6 +30,7 @@ def get_args():
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     parser.add_argument("--resume_from", type=str, required=False)
+    parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
     return args
@@ -233,6 +234,7 @@ def save_checkpoint(
         "stored_y_images": y_img_buffer.stored_images,
     }
     torch.save(state_dict, str(save_path))
+    wandb.save(state_dict)
 
 
 if __name__ == "__main__":
@@ -242,7 +244,7 @@ if __name__ == "__main__":
 
     args = get_args()
 
-    wandb.init(project="CycleGAN")
+    wandb.init(project="CycleGAN", resume=True if args.resume_from else False)
     wandb.config.update({
         "Seed": config.SEED,
         "Fixed pairs": config.FIXED_PAIRS,
@@ -276,6 +278,7 @@ if __name__ == "__main__":
     ### Resume
     if args.resume_from is not None:
         state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
+        state_dict = torch.load(wandb.restore(args.resume_from), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
         disc_y.load_state_dict(state_dict["Dy"])
         gen_x.load_state_dict(state_dict["Gx"])
