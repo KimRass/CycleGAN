@@ -29,8 +29,9 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
-    parser.add_argument("--resume_from", type=str, required=False)
-    parser.add_argument("--run_id", type=str, required=False)
+    # parser.add_argument("--resume_from", type=str, required=False)
+    parser.add_argument("--resume", action="store_true", required=False)
+    # parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
     return args
@@ -217,6 +218,11 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
     return forward_grid, backward_grid
 
 
+def save_gen(gen, save_path):
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+    torch.save(gen.state_dict, str(save_path))
+
+
 def save_checkpoint(
     epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
@@ -233,7 +239,7 @@ def save_checkpoint(
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
     }
-    torch.save(state_dict, str(save_path))
+    # torch.save(state_dict, str(save_path))
     wandb.save(state_dict)
 
 
@@ -241,10 +247,11 @@ if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
     SAMPLES_DIR = f"{PARENT_DIR}/samples"
     CKPTS_DIR = f"{PARENT_DIR}/checkpoints"
+    CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
 
     args = get_args()
 
-    wandb.init(project="CycleGAN", resume=True if args.resume_from else False)
+    run = wandb.init(project="CycleGAN", resume=args.resume)
     wandb.config.update({
         "Seed": config.SEED,
         "Fixed pairs": config.FIXED_PAIRS,
@@ -276,9 +283,10 @@ if __name__ == "__main__":
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     ### Resume
-    if args.resume_from is not None:
-        state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
-        state_dict = torch.load(wandb.restore(args.resume_from), map_location=config.DEVICE)
+    # if args.resume_from is not None:
+    if wandb.run.resumed:
+        # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
+        state_dict = torch.load(wandb.restore(CKPT_PATH))
         disc_x.load_state_dict(state_dict["Dx"])
         disc_y.load_state_dict(state_dict["Dy"])
         gen_x.load_state_dict(state_dict["Gx"])
@@ -422,6 +430,8 @@ if __name__ == "__main__":
 
         ### Save checkpoint.
         if epoch % config.SAVE_CKPT_EVERY == 0:
+            save_gen(gen=gen_x, save_path=CKPTS_DIR/"Gx.pth")
+            save_gen(gen=gen_y, save_path=CKPTS_DIR/"Gy.pth")
             save_checkpoint(
                 epoch=epoch,
                 disc_x=disc_x,
@@ -433,5 +443,6 @@ if __name__ == "__main__":
                 scaler=scaler,
                 x_img_buffer=x_img_buffer,
                 y_img_buffer=y_img_buffer,
-                save_path=f"{CKPTS_DIR}/{args.ds_name}/epoch_{epoch}.pth",
+                save_path=CKPT_PATH,
+                # save_path=f"{CKPTS_DIR}/{args.ds_name}/epoch_{epoch}.pth",
             )
