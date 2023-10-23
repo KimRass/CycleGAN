@@ -435,21 +435,22 @@ if __name__ == "__main__":
     #             step=epoch,
     #         )
 
-        ### Save checkpoint.
-        epoch = 5
-        save_wandb_checkpoint(
-            epoch=epoch,
-            disc_x=disc_x,
-            disc_y=disc_y,
-            gen_x=gen_x,
-            gen_y=gen_y,
-            disc_optim=disc_optim,
-            gen_optim=gen_optim,
-            scaler=scaler,
-            x_img_buffer=x_img_buffer,
-            y_img_buffer=y_img_buffer,
-            save_path=CKPT_PATH,
-        )
-        # if epoch % config.SAVE_GENS_EVERY == 0:
-        #     save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
-        #     save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
+
+    ### Save checkpoint.
+    epoch = 5
+    save_wandb_checkpoint(
+        epoch=epoch,
+        disc_x=disc_x,
+        disc_y=disc_y,
+        gen_x=gen_x,
+        gen_y=gen_y,
+        disc_optim=disc_optim,
+        gen_optim=gen_optim,
+        scaler=scaler,
+        x_img_buffer=x_img_buffer,
+        y_img_buffer=y_img_buffer,
+        save_path=CKPT_PATH,
+    )
+    # if epoch % config.SAVE_GENS_EVERY == 0:
+    #     save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
+    #     save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
