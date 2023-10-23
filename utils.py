@@ -34,7 +34,6 @@ def _batched_image_to_grid(image, n_cols):
     pad = max(2, int(max(h, w) * 0.016))
     grid = make_grid(tensor=image, nrow=n_cols, normalize=False, padding=pad)
     grid = grid.clone().permute((1, 2, 0)).detach().cpu().numpy()
-
     grid *= 255
     grid = np.clip(a=grid, a_min=0, a_max=255).astype("uint8")
 

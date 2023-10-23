@@ -221,7 +221,7 @@ def save_gen(gen, save_path):
     torch.save(gen.state_dict(), str(save_path))
 
 
-def save_wandb_checkpoint(
+def save_checkpoint(
     epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
@@ -418,29 +418,38 @@ if __name__ == "__main__":
             accum_disc_y_loss += disc_y_loss.item()
             accum_disc_x_loss += disc_x_loss.item()
 
+        accum_gen_x_gan_loss /= len(train_dl)
+        accum_gen_y_gan_loss /= len(train_dl)
+        accum_gen_x_id_loss /= len(train_dl)
+        accum_gen_y_id_loss /= len(train_dl)
+        accum_forward_cycle_loss /= len(train_dl)
+        accum_backward_cycle_loss /= len(train_dl)
+        accum_disc_y_loss /= len(train_dl)
+        accum_disc_x_loss /= len(train_dl)
+
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
-        msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
-        msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
-        msg += f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
-        msg += f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
-        msg += f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
-        msg += f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
-        msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
+        msg += f"[ Dy: {accum_disc_y_loss:.3f} ]"
+        msg += f"[ Dx: {accum_disc_x_loss:.3f} ]"
+        msg += f"[ Gx GAN: {accum_gen_x_gan_loss:.3f} ]"
+        msg += f"[ Gy GAN: {accum_gen_y_gan_loss:.3f} ]"
+        msg += f"[ Gx id: {accum_gen_x_id_loss:.3f} ]"
+        msg += f"[ Gy id: {accum_gen_y_id_loss:.3f} ]"
+        msg += f"[ Forward cycle: {accum_forward_cycle_loss:.3f} ]"
+        msg += f"[ Backward cycle: {accum_backward_cycle_loss:.3f} ]"
         print(msg)
 
         wandb.log(
             {
                 "Learning rate": disc_optim.param_groups[0]["lr"],
-                "Dy loss": accum_disc_y_loss / len(train_dl),
-                "Dx loss": accum_disc_x_loss / len(train_dl),
-                "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
-                "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
-                "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
-                "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
-                "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
-                "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
+                "Dy loss": accum_disc_y_loss,
+                "Dx loss": accum_disc_x_loss,
+                "Gx GAN loss": accum_gen_x_gan_loss,
+                "Gy GAN loss": accum_gen_y_gan_loss,
+                "Gx identity loss": accum_gen_x_id_loss,
+                "Gy identity loss": accum_gen_y_id_loss,
+                "Forward cycle loss": accum_forward_cycle_loss,
+                "Backward cycle loss": accum_backward_cycle_loss,
             },
             step=epoch,
         )
@@ -467,7 +476,7 @@ if __name__ == "__main__":
             save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
             save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
 
-        save_wandb_checkpoint(
+        save_checkpoint(
             epoch=epoch,
             disc_x=disc_x,
             disc_y=disc_y,
