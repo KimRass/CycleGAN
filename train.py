@@ -290,7 +290,8 @@ if __name__ == "__main__":
 
     ### Resume
     if wandb.run.resumed:
-        state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
+        state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
+        # state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
         disc_y.load_state_dict(state_dict["Dy"])
         gen_x.load_state_dict(state_dict["Gx"])
@@ -305,6 +306,7 @@ if __name__ == "__main__":
         print(f"Resume from epoch {init_epoch + 1}.")
     else:
         init_epoch = 0
+    print(init_epoch)
 
     # for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
     #     update_lrs(
