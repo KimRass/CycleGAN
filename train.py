@@ -245,8 +245,8 @@ def save_checkpoint(
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
-    SAMPLES_DIR = f"{PARENT_DIR}/samples"
-    CKPTS_DIR = f"{PARENT_DIR}/checkpoints"
+    SAMPLES_DIR = PARENT_DIR/"samples"
+    CKPTS_DIR = PARENT_DIR/"checkpoints"
     CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
 
     args = get_args()
