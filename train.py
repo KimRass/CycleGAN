@@ -298,6 +298,7 @@ if __name__ == "__main__":
         x_img_buffer.stored_images = state_dict["stored_x_images"]
         y_img_buffer.stored_images = state_dict["stored_y_images"]
         # print(f"Resume from checkpoint '{args.resume_from}'.")
+        print(f"Resume from epoch {init_epoch + 1}.")
     else:
         init_epoch = 0
 
