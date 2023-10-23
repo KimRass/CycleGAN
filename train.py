@@ -223,7 +223,7 @@ def save_gen(gen, save_path):
     torch.save(gen.state_dict, str(save_path))
 
 
-def save_checkpoint(
+def save_wandb_checkpoint(
     epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
@@ -429,20 +429,20 @@ if __name__ == "__main__":
             )
 
         ### Save checkpoint.
-        if epoch % config.SAVE_CKPT_EVERY == 0:
-            save_gen(gen=gen_x, save_path=CKPTS_DIR/"Gx.pth")
-            save_gen(gen=gen_y, save_path=CKPTS_DIR/"Gy.pth")
-            save_checkpoint(
-                epoch=epoch,
-                disc_x=disc_x,
-                disc_y=disc_y,
-                gen_x=gen_x,
-                gen_y=gen_y,
-                disc_optim=disc_optim,
-                gen_optim=gen_optim,
-                scaler=scaler,
-                x_img_buffer=x_img_buffer,
-                y_img_buffer=y_img_buffer,
-                save_path=CKPT_PATH,
-                # save_path=f"{CKPTS_DIR}/{args.ds_name}/epoch_{epoch}.pth",
-            )
+        save_wandb_checkpoint(
+            epoch=epoch,
+            disc_x=disc_x,
+            disc_y=disc_y,
+            gen_x=gen_x,
+            gen_y=gen_y,
+            disc_optim=disc_optim,
+            gen_optim=gen_optim,
+            scaler=scaler,
+            x_img_buffer=x_img_buffer,
+            y_img_buffer=y_img_buffer,
+            save_path=CKPT_PATH,
+            # save_path=f"{CKPTS_DIR}/{args.ds_name}/epoch_{epoch}.pth",
+        )
+        if epoch % config.SAVE_GENS_EVERY == 0:
+            save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
+            save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
