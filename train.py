@@ -255,11 +255,14 @@ if __name__ == "__main__":
         # project="CycleGAN", id=args.run_id, resume="must" if args.run_id is not None else "never",
         project="CycleGAN", resume=args.run_id,
     )
-    wandb.config.update({
-        "SEED": config.SEED,
-        "FIXED_PAIRS": config.FIXED_PAIRS,
-    })
-    wandb.config.update(args)
+    wandb.config.update(
+        {
+            "SEED": config.SEED,
+            "FIXED_PAIRS": config.FIXED_PAIRS,
+        },
+        allow_val_change=True,
+    )
+    wandb.config.update(args, allow_val_change=True)
     print(wandb.config)
 
     REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
