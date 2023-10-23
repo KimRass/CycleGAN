@@ -218,7 +218,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
 
 def save_gen(gen, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    torch.save(gen.state_dict, str(save_path))
+    torch.save(gen.state_dict(), str(save_path))
 
 
 def save_wandb_checkpoint(
