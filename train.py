@@ -297,7 +297,7 @@ if __name__ == "__main__":
         init_epoch = state_dict["epoch"]
         x_img_buffer.stored_images = state_dict["stored_x_images"]
         y_img_buffer.stored_images = state_dict["stored_y_images"]
-        print(f"Resume from checkpoint '{args.resume_from}'.")
+        # print(f"Resume from checkpoint '{args.resume_from}'.")
     else:
         init_epoch = 0
 
