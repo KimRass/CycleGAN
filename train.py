@@ -249,9 +249,9 @@ if __name__ == "__main__":
     CKPTS_DIR = PARENT_DIR/"checkpoints"
     CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
     print(__file__)
-    print(Path(__file__))
-    print(PARENT_DIR)
-    print(str(PARENT_DIR))
+    print(Path(__file__).resolve())
+    # print(PARENT_DIR)
+    # print(str(PARENT_DIR))
 
     args = get_args()
 
