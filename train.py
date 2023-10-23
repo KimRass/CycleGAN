@@ -244,14 +244,10 @@ def save_wandb_checkpoint(
 
 
 if __name__ == "__main__":
-    PARENT_DIR = Path(__file__).parent
+    PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
     CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
-    print(__file__)
-    print(Path(__file__).resolve())
-    # print(PARENT_DIR)
-    # print(str(PARENT_DIR))
 
     args = get_args()
 
@@ -288,11 +284,9 @@ if __name__ == "__main__":
 
     ### Resume
     # if args.resume_from is not None:
-    print(wandb.run.resumed)
-    # if wandb.run.resumed:
-    if args.resume:
+    if wandb.run.resumed:
+    # if args.resume:
         # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
-        print(str(CKPT_PATH))
         state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
         disc_y.load_state_dict(state_dict["Dy"])
