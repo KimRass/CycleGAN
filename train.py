@@ -29,8 +29,6 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
-    # parser.add_argument("--resume_from", type=str, required=False)
-    # parser.add_argument("--resume", action="store_true", required=False)
     parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
@@ -239,8 +237,8 @@ def save_wandb_checkpoint(
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
     }
-    torch.save(state_dict, save_path)
-    wandb.save(save_path, base_path=Path(save_path).parent)
+    torch.save(state_dict, str(save_path))
+    wandb.save(str(save_path), base_path=Path(save_path).parent)
 
 
 if __name__ == "__main__":
