@@ -284,7 +284,9 @@ if __name__ == "__main__":
 
     ### Resume
     # if args.resume_from is not None:
-    if wandb.run.resumed:
+    print(wandb.run.resumed)
+    # if wandb.run.resumed:
+    if args.resume:
         # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
         state_dict = torch.load(wandb.restore(str(CKPT_PATH)))
         disc_x.load_state_dict(state_dict["Dx"])
