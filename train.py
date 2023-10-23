@@ -30,8 +30,8 @@ def get_args():
     parser.add_argument("--n_cpus", type=int, required=True)
     parser.add_argument("--test_batch_size", type=int, required=True)
     # parser.add_argument("--resume_from", type=str, required=False)
-    parser.add_argument("--resume", action="store_true", required=False)
-    # parser.add_argument("--run_id", type=str, required=False)
+    # parser.add_argument("--resume", action="store_true", required=False)
+    parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
     return args
@@ -247,15 +247,16 @@ if __name__ == "__main__":
     PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
-    # CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
-    CKPT_PATH = CKPTS_DIR/"checkpoint"
+    CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
 
     args = get_args()
 
-    run = wandb.init(project="CycleGAN", resume=args.resume)
+    run = wandb.init(
+        project="CycleGAN", id=args.run_id, resume="must" if args.run_id is not None else "never",
+    )
     wandb.config.update({
-        "Seed": config.SEED,
-        "Fixed pairs": config.FIXED_PAIRS,
+        "SEED": config.SEED,
+        "FIXED_PAIRS": config.FIXED_PAIRS,
     })
     wandb.config.update(args)
     print(wandb.config)
@@ -285,7 +286,6 @@ if __name__ == "__main__":
 
     ### Resume
     if wandb.run.resumed:
-        print(wandb.restore(str(CKPT_PATH)))
         # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
         state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
