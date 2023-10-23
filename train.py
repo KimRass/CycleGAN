@@ -239,8 +239,8 @@ def save_wandb_checkpoint(
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
     }
-    # torch.save(state_dict, str(save_path))
-    wandb.save(state_dict)
+    torch.save(state_dict, str(save_path))
+    wandb.save(str(save_path))
 
 
 if __name__ == "__main__":
