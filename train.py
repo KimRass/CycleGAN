@@ -245,14 +245,11 @@ def save_wandb_checkpoint(
 
 if __name__ == "__main__":
     PARENT_DIR = Path(__file__).parent
-    # PARENT_DIR = Path("/Users/jongbeomkim/Desktop/workspace/CycleGAN")
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
     CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
+    print(PARENT_DIR)
     print(str(PARENT_DIR))
-    print(str(SAMPLES_DIR))
-    print(str(CKPTS_DIR))
-    print(str(CKPT_PATH))
 
     args = get_args()
 
