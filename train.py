@@ -247,7 +247,8 @@ if __name__ == "__main__":
     PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
-    CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
+    # CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
+    CKPT_PATH = CKPTS_DIR/"checkpoint"
 
     args = get_args()
 
@@ -283,9 +284,8 @@ if __name__ == "__main__":
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     ### Resume
-    # if args.resume_from is not None:
     if wandb.run.resumed:
-    # if args.resume:
+        print(wandb.restore(str(CKPT_PATH)))
         # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
         state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
