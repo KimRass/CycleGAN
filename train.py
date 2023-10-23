@@ -252,7 +252,8 @@ if __name__ == "__main__":
     args = get_args()
 
     run = wandb.init(
-        project="CycleGAN", id=args.run_id, resume="must" if args.run_id is not None else "never",
+        # project="CycleGAN", id=args.run_id, resume="must" if args.run_id is not None else "never",
+        project="CycleGAN", resume=args.run_id,
     )
     wandb.config.update({
         "SEED": config.SEED,
