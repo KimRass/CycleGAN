@@ -288,7 +288,8 @@ if __name__ == "__main__":
     # if wandb.run.resumed:
     if args.resume:
         # state_dict = torch.load(args.resume_from, map_location=config.DEVICE)
-        state_dict = torch.load(wandb.restore(str(CKPT_PATH)))
+        print(str(CKPT_PATH))
+        state_dict = torch.load(wandb.restore(str(CKPT_PATH)), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
         disc_y.load_state_dict(state_dict["Dy"])
         gen_x.load_state_dict(state_dict["Gx"])
