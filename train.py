@@ -239,8 +239,8 @@ def save_wandb_checkpoint(
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
     }
-    torch.save(state_dict, str(save_path))
-    wandb.save(str(save_path))
+    torch.save(state_dict, save_path)
+    wandb.save(save_path, base_path=Path(save_path).parent)
 
 
 if __name__ == "__main__":
@@ -251,10 +251,7 @@ if __name__ == "__main__":
 
     args = get_args()
 
-    run = wandb.init(
-        # project="CycleGAN", id=args.run_id, resume="must" if args.run_id is not None else "never",
-        project="CycleGAN", resume=args.run_id,
-    )
+    run = wandb.init(project="CycleGAN", resume=args.run_id)
     wandb.config.update(
         {
             "SEED": config.SEED,
@@ -302,155 +299,151 @@ if __name__ == "__main__":
         init_epoch = state_dict["epoch"]
         x_img_buffer.stored_images = state_dict["stored_x_images"]
         y_img_buffer.stored_images = state_dict["stored_y_images"]
-        # print(f"Resume from checkpoint '{args.resume_from}'.")
-        print(f"Resume from epoch {init_epoch + 1}.")
+        print(f"Resuming from epoch {init_epoch + 1}...")
     else:
         init_epoch = 0
-    print(init_epoch)
 
-    # for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
-    #     update_lrs(
-    #         disc_optim=disc_optim,
-    #         gen_optim=gen_optim,
-    #         epoch=epoch,
-    #     )
+    for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
+        update_lrs(
+            disc_optim=disc_optim,
+            gen_optim=gen_optim,
+            epoch=epoch,
+        )
 
-    #     accum_disc_y_loss = 0
-    #     accum_disc_x_loss = 0
-    #     accum_gen_x_gan_loss = 0
-    #     accum_gen_y_gan_loss = 0
-    #     accum_gen_x_id_loss = 0
-    #     accum_gen_y_id_loss = 0
-    #     accum_forward_cycle_loss = 0
-    #     accum_backward_cycle_loss = 0
+        accum_disc_y_loss = 0
+        accum_disc_x_loss = 0
+        accum_gen_x_gan_loss = 0
+        accum_gen_y_gan_loss = 0
+        accum_gen_x_id_loss = 0
+        accum_gen_y_id_loss = 0
+        accum_forward_cycle_loss = 0
+        accum_backward_cycle_loss = 0
 
-    #     start_time = time()
-    #     for step, (real_x, real_y) in enumerate(train_dl, start=1):
-    #         real_x = real_x.to(config.DEVICE)
-    #         real_y = real_y.to(config.DEVICE)
+        start_time = time()
+        for step, (real_x, real_y) in enumerate(train_dl, start=1):
+            real_x = real_x.to(config.DEVICE)
+            real_y = real_y.to(config.DEVICE)
 
-    #         ### Train Gx and Gy.
-    #         (
-    #             fake_x,
-    #             fake_y,
-    #             gen_x_gan_loss,
-    #             gen_y_gan_loss,
-    #             gen_x_id_loss,
-    #             gen_y_id_loss,
-    #             forward_cycle_loss,
-    #             backward_cycle_loss,
-    #         ) = get_gen_losses(
-    #             disc_x=disc_x,
-    #             disc_y=disc_y,
-    #             gen_x=gen_x,
-    #             gen_y=gen_y,
-    #             real_x=real_x,
-    #             real_y=real_y,
-    #             real_gt=REAL_GT,
-    #         )
-    #         gen_loss = gen_x_gan_loss + gen_y_gan_loss
-    #         gen_loss += config.ID_LAMB * (gen_x_id_loss + gen_y_id_loss)
-    #         gen_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
+            ### Train Gx and Gy.
+            (
+                fake_x,
+                fake_y,
+                gen_x_gan_loss,
+                gen_y_gan_loss,
+                gen_x_id_loss,
+                gen_y_id_loss,
+                forward_cycle_loss,
+                backward_cycle_loss,
+            ) = get_gen_losses(
+                disc_x=disc_x,
+                disc_y=disc_y,
+                gen_x=gen_x,
+                gen_y=gen_y,
+                real_x=real_x,
+                real_y=real_y,
+                real_gt=REAL_GT,
+            )
+            gen_loss = gen_x_gan_loss + gen_y_gan_loss
+            gen_loss += config.ID_LAMB * (gen_x_id_loss + gen_y_id_loss)
+            gen_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
 
-    #         set_requires_grad(models=[disc_x, disc_y], grad=False) # Freeze Ds
+            set_requires_grad(models=[disc_x, disc_y], grad=False) # Freeze Ds
 
-    #         gen_optim.zero_grad()
-    #         scaler.scale(gen_loss).backward()
-    #         scaler.step(gen_optim)
+            gen_optim.zero_grad()
+            scaler.scale(gen_loss).backward()
+            scaler.step(gen_optim)
 
-    #         set_requires_grad(models=[disc_x, disc_y], grad=True)
+            set_requires_grad(models=[disc_x, disc_y], grad=True)
 
-    #         accum_gen_x_gan_loss += gen_x_gan_loss.item()
-    #         accum_gen_y_gan_loss += gen_y_gan_loss.item()
-    #         accum_gen_x_id_loss += gen_x_id_loss.item()
-    #         accum_gen_y_id_loss += gen_y_id_loss.item()
-    #         accum_forward_cycle_loss += forward_cycle_loss.item()
-    #         accum_backward_cycle_loss += backward_cycle_loss.item()
+            accum_gen_x_gan_loss += gen_x_gan_loss.item()
+            accum_gen_y_gan_loss += gen_y_gan_loss.item()
+            accum_gen_x_id_loss += gen_x_id_loss.item()
+            accum_gen_y_id_loss += gen_y_id_loss.item()
+            accum_forward_cycle_loss += forward_cycle_loss.item()
+            accum_backward_cycle_loss += backward_cycle_loss.item()
 
-    #         ### Train Dx and Dy.
-    #         disc_y_loss, disc_x_loss = get_disc_losses(
-    #             disc_x=disc_x,
-    #             disc_y=disc_y,
-    #             real_x=real_x,
-    #             real_y=real_y,
-    #             real_gt=REAL_GT,
-    #             fake_gt=FAKE_GT,
-    #             fake_x=fake_x,
-    #             fake_y=fake_y,
-    #             x_img_buffer=x_img_buffer,
-    #             y_img_buffer=y_img_buffer,
-    #         )
+            ### Train Dx and Dy.
+            disc_y_loss, disc_x_loss = get_disc_losses(
+                disc_x=disc_x,
+                disc_y=disc_y,
+                real_x=real_x,
+                real_y=real_y,
+                real_gt=REAL_GT,
+                fake_gt=FAKE_GT,
+                fake_x=fake_x,
+                fake_y=fake_y,
+                x_img_buffer=x_img_buffer,
+                y_img_buffer=y_img_buffer,
+            )
 
-    #         disc_optim.zero_grad()
-    #         scaler.scale(disc_y_loss).backward()
-    #         scaler.scale(disc_x_loss).backward()
-    #         scaler.step(disc_optim)
+            disc_optim.zero_grad()
+            scaler.scale(disc_y_loss).backward()
+            scaler.scale(disc_x_loss).backward()
+            scaler.step(disc_optim)
 
-    #         accum_disc_y_loss += disc_y_loss.item()
-    #         accum_disc_x_loss += disc_x_loss.item()
+            accum_disc_y_loss += disc_y_loss.item()
+            accum_disc_x_loss += disc_x_loss.item()
 
-    #         scaler.update()
+            scaler.update()
 
-    #     msg = f"[ {get_elapsed_time(start_time)} ]"
-    #     msg += f"[ {epoch}/{config.N_EPOCHS} ]"
-    #     msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
-    #     msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
-    #     print(msg)
+        msg = f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"[ {epoch}/{config.N_EPOCHS} ]"
+        msg += f"[ Dy: {accum_disc_y_loss / len(train_dl):.3f} ]"
+        msg += f"[ Dx: {accum_disc_x_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gx GAN: {accum_gen_x_gan_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gy GAN: {accum_gen_y_gan_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gx id: {accum_gen_x_id_loss / len(train_dl):.3f} ]"
+        msg += f"[ Gy id: {accum_gen_y_id_loss / len(train_dl):.3f} ]"
+        msg += f"[ Forward cycle: {accum_forward_cycle_loss / len(train_dl):.3f} ]"
+        msg += f"[ Backward cycle: {accum_backward_cycle_loss / len(train_dl):.3f} ]"
+        print(msg)
 
-    #     wandb.log(
-    #         {
-    #             "Learning rate": disc_optim.param_groups[0]["lr"],
-    #             "Dy loss": accum_disc_y_loss / len(train_dl),
-    #             "Dx loss": accum_disc_x_loss / len(train_dl),
-    #             "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
-    #             "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
-    #             "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
-    #             "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
-    #             "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
-    #             "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
-    #         },
-    #         step=epoch,
-    #     )
+        wandb.log(
+            {
+                "Learning rate": disc_optim.param_groups[0]["lr"],
+                "Dy loss": accum_disc_y_loss / len(train_dl),
+                "Dx loss": accum_disc_x_loss / len(train_dl),
+                "Gx GAN loss": accum_gen_x_gan_loss / len(train_dl),
+                "Gy GAN loss": accum_gen_y_gan_loss / len(train_dl),
+                "Gx identity loss": accum_gen_x_id_loss / len(train_dl),
+                "Gy identity loss": accum_gen_y_id_loss / len(train_dl),
+                "Forward cycle loss": accum_forward_cycle_loss / len(train_dl),
+                "Backward cycle loss": accum_backward_cycle_loss / len(train_dl),
+            },
+            step=epoch,
+        )
 
-    #     ### Generate samples.
-    #     if epoch % config.GEN_SAMPLES_EVERY == 0:
-    #         forward_grid, backward_grid = generate_samples(
-    #             gen_x=gen_x, gen_y=gen_y, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
-    #         )
-    #         forward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/forward_epoch_{epoch}.jpg"
-    #         backward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/backward_epoch_{epoch}.jpg"
-    #         save_image(forward_grid, path=forward_save_path)
-    #         save_image(backward_grid, path=backward_save_path)
-    #         wandb.log(
-    #             {
-    #                 "Generated images from test set (forward)": wandb.Image(forward_save_path),
-    #                 "Generated images from test set (backward)": wandb.Image(backward_save_path),
-    #             },
-    #             step=epoch,
-    #         )
+        ### Generate samples.
+        if epoch % config.GEN_SAMPLES_EVERY == 0:
+            forward_grid, backward_grid = generate_samples(
+                gen_x=gen_x, gen_y=gen_y, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
+            )
+            forward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/forward_epoch_{epoch}.jpg"
+            backward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/backward_epoch_{epoch}.jpg"
+            save_image(forward_grid, path=forward_save_path)
+            save_image(backward_grid, path=backward_save_path)
+            wandb.log(
+                {
+                    "Generated images from test set (forward)": wandb.Image(forward_save_path),
+                    "Generated images from test set (backward)": wandb.Image(backward_save_path),
+                },
+                step=epoch,
+            )
 
-
-    ### Save checkpoint.
-    epoch = 5
-    save_wandb_checkpoint(
-        epoch=epoch,
-        disc_x=disc_x,
-        disc_y=disc_y,
-        gen_x=gen_x,
-        gen_y=gen_y,
-        disc_optim=disc_optim,
-        gen_optim=gen_optim,
-        scaler=scaler,
-        x_img_buffer=x_img_buffer,
-        y_img_buffer=y_img_buffer,
-        save_path=CKPT_PATH,
-    )
-    # if epoch % config.SAVE_GENS_EVERY == 0:
-    #     save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
-    #     save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
+        ### Save checkpoint.
+        save_wandb_checkpoint(
+            epoch=epoch,
+            disc_x=disc_x,
+            disc_y=disc_y,
+            gen_x=gen_x,
+            gen_y=gen_y,
+            disc_optim=disc_optim,
+            gen_optim=gen_optim,
+            scaler=scaler,
+            x_img_buffer=x_img_buffer,
+            y_img_buffer=y_img_buffer,
+            save_path=CKPT_PATH,
+        )
+        if epoch % config.SAVE_GENS_EVERY == 0:
+            save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
+            save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
