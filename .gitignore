@@ -7,3 +7,6 @@ lib/
 lib64
 pyvenv.cfg
 share/
+wandb/
+samples/
+checkpoints/
