@@ -330,6 +330,8 @@ if __name__ == "__main__":
         allow_val_change=True,
     )
     wandb.config.update(args, allow_val_change=True)
+    print(args.run_id)
+    print(wandb.run.name)
     print(wandb.config)
 
     REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
