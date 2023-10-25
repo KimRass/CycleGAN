@@ -330,8 +330,6 @@ if __name__ == "__main__":
         allow_val_change=True,
     )
     wandb.config.update(args, allow_val_change=True)
-    print(args.run_id)
-    print(wandb.run.name)
     print(wandb.config)
 
     REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
@@ -358,7 +356,7 @@ if __name__ == "__main__":
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     ### Resume
-    CKPT_PATH = CKPTS_DIR/{args.ds_name}/"checkpoint.tar"
+    CKPT_PATH = CKPTS_DIR/args.ds_name/"checkpoint.tar"
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
