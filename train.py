@@ -19,6 +19,7 @@ from utils import (
     get_elapsed_time,
     set_requires_grad,
     ImageBuffer,
+    _modify_state_dict,
 )
 
 
@@ -218,7 +219,8 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
 
 def save_gen(gen, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    torch.save(gen.state_dict(), str(save_path))
+    state_dict = _modify_state_dict(gen.state_dict())
+    torch.save(state_dict, str(save_path))
 
 
 def save_checkpoint(
@@ -314,7 +316,6 @@ if __name__ == "__main__":
     PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
-    CKPT_PATH = CKPTS_DIR/"checkpoint.tar"
 
     args = get_args()
 
@@ -355,6 +356,7 @@ if __name__ == "__main__":
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     ### Resume
+    CKPT_PATH = CKPTS_DIR/{args.ds_name}/"checkpoint.tar"
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])

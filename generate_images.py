@@ -5,7 +5,7 @@ from tqdm.auto import tqdm
 import argparse
 
 import config
-from utils import images_to_grid, save_image
+from utils import images_to_grid, save_image, _modify_state_dict
 from model import Generator
 from dataset import OneSideImageDataset
 
@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument("--x_or_y", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
-    parser.add_argument("--batch_size", type=int, required=True)
+    parser.add_argument("--batch_size", type=int, required=False, default=1)
 
     args = parser.parse_args()
     return args
@@ -41,15 +41,16 @@ def get_dir_name(ds_name, x_or_y):
 
 
 if __name__ == "__main__":
-    PARENT_DIR = Path(__file__).parent
+    PARENT_DIR = Path(__file__).parent.resolve()
 
     args = get_args()
 
     DIR_NAME = get_dir_name(ds_name=args.ds_name, x_or_y=args.x_or_y)
 
     gen = Generator().to(config.DEVICE)
-    ckpt = torch.load(args.ckpt_path, map_location=config.DEVICE)
-    gen.load_state_dict(ckpt)
+    state_dict = torch.load(args.ckpt_path, map_location=config.DEVICE)
+    state_dict = _modify_state_dict(state_dict)
+    gen.load_state_dict(state_dict)
 
     test_ds = OneSideImageDataset(
         data_dir=args.data_dir,

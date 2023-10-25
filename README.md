@@ -2,13 +2,6 @@
 ## Paper Reading
 - [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/unpaired_image_to_image_translation_using_cycle_consistent_adversarial_networks.pdf)
 ## How to Use
-### Converting Checkpoint to Pre-trained Generators
-```bash
-# For example,
-python3 checkpoint.py\
-    --ckpt_path=".../checkpoints/monet2photo_epoch_200.pth"\
-    --save_dir=".../cyclegan/checkpoints/"
-```
 ### Image Generation
 ```bash
 # For example,
@@ -23,8 +16,8 @@ python3 generate_images.py\
 ## Pre-trained Models and Generated Images
 |  | Pre-trained model | Generated images on test set |
 | - | - | - |
-| Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/18FpqtUzrCZA0hHXKhEJk_R0NkkQwiDYa/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
-| Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1MxJYDgIJ4JC5KmaKJ4902QDkq7PzRd19/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
+| Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/17FMHYrDzmaC2fQHcBxxjbS758ifKBiHX/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
+| Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1TW8eOKYU3b_6GlhV2Z1FIDZMGjSbh3lW/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
 | Vangogh to Photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1tIktlGXTwPZGb-Zu7y-MSWWO304FivaB/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
 | Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
 | Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
