@@ -113,5 +113,7 @@ def _modify_state_dict(state_dict, keyword="_orig_mod."):
     for old_key in list(state_dict.keys()):
         if old_key and old_key.startswith(keyword):
             new_key = old_key[len(keyword):]
-            new_state_dict[new_key] = state_dict[old_key]
+        else:
+            new_key = old_key
+        new_state_dict[new_key] = state_dict[old_key]
     return new_state_dict

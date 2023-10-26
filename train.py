@@ -356,7 +356,8 @@ if __name__ == "__main__":
     y_img_buffer = ImageBuffer(buffer_size=config.BUFFER_SIZE)
 
     ### Resume
-    CKPT_PATH = CKPTS_DIR/args.ds_name/"checkpoint.tar"
+    DS_NAME_DIR = CKPTS_DIR/args.ds_name
+    CKPT_PATH = DS_NAME_DIR/"checkpoint.tar"
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
@@ -477,8 +478,8 @@ if __name__ == "__main__":
 
         ### Save checkpoint.
         if epoch % config.SAVE_GENS_EVERY == 0:
-            save_gen(gen=gen_x, save_path=CKPTS_DIR/f"Gx_epoch_{epoch}.pth")
-            save_gen(gen=gen_y, save_path=CKPTS_DIR/f"Gy_epoch_{epoch}.pth")
+            save_gen(gen=gen_x, save_path=DS_NAME_DIR/f"Gx_epoch_{epoch}.pth")
+            save_gen(gen=gen_y, save_path=DS_NAME_DIR/f"Gy_epoch_{epoch}.pth")
 
         save_checkpoint(
             epoch=epoch,

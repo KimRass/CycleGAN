@@ -22,8 +22,9 @@ python3 generate_images.py\
 | Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
 | Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
 | Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
-| Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1O9hs1d9dcYaAKPcQpXhlLWVYZnN-zG8V/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
-| Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1-gA_F5r3YNV97lqMu_iby_Kx-INphEMT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
+| Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1dXuPvCiuIBPB63-bmoxX7kMi819HaECh/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
+| Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1XWigILmuk1GZtvnVt19Fj6oLFqm57VD3/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
+- 'horse2zebra' dataset의 경우 이미지 중 일부가 화질이 좋지 않거나 이미지의 비율이 왜곡되어 있고 이미지 내에서 말 또는 얼룩말이 차지하는 영역이 매우 작은 등 개인적으로 데이터셋의 품질 자체가 좋지 않다고 생각합니다. 좀 더 대량의, 고품질 데이터셋을 구축하여 다시 학습시켜보면 더욱 우수한 모델을 얻를 수 있을 것입니다.
 ### Monet to Photo
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/e7a9a65e-28d0-49e3-befa-5d6d38121276" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/b035ea97-7026-4953-b2df-1a5c70849501" width="500">
