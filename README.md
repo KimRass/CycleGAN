@@ -17,13 +17,15 @@ python3 generate_images.py\
 |  | Pre-trained model | Generated images on test set |
 | - | - | - |
 | Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/17FMHYrDzmaC2fQHcBxxjbS758ifKBiHX/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
-| Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1TW8eOKYU3b_6GlhV2Z1FIDZMGjSbh3lW/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
-| Vangogh to Photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1tIktlGXTwPZGb-Zu7y-MSWWO304FivaB/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
-| Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
-| Ukiyo-e to Photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
-| Photo to Ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
-| Horse to Zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1dXuPvCiuIBPB63-bmoxX7kMi819HaECh/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
-| Zebra to Horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1XWigILmuk1GZtvnVt19Fj6oLFqm57VD3/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
+| Photo to monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1TW8eOKYU3b_6GlhV2Z1FIDZMGjSbh3lW/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
+| Vangogh to photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1tIktlGXTwPZGb-Zu7y-MSWWO304FivaB/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
+| Photo to vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
+| Ukiyo-e to photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
+| Photo to ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
+| Horse to zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1dXuPvCiuIBPB63-bmoxX7kMi819HaECh/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
+| Zebra to horse | [cyclegan_zebra_to_horse.pth](https://drive.google.com/file/d/1XWigILmuk1GZtvnVt19Fj6oLFqm57VD3/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/zebra_to_horse |
+| Summer to winter | [cyclegan_summer_to_winter.pth](https://drive.google.com/file/d/1pS5sVKw-xO0GcxgG-hc8wn52DlANCxY6/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/summer_to_winter |
+| Winter to summer | [cyclegan_winter_to_summer.pth](https://drive.google.com/file/d/1pUIGSXbz3fIyIP44oBQZdcuP5DmqhLDe/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/winter_to_summer |
 - 'horse2zebra' dataset의 경우 이미지 중 일부가 화질이 좋지 않거나 이미지의 비율이 왜곡되어 있고 이미지 내에서 말 또는 얼룩말이 차지하는 영역이 매우 작은 등 개인적으로 데이터셋의 품질 자체가 좋지 않다고 생각합니다. 좀 더 대량의, 고품질 데이터셋을 구축하여 다시 학습시켜보면 더욱 우수한 모델을 얻를 수 있을 것입니다.
 ### Monet to Photo
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/e7a9a65e-28d0-49e3-befa-5d6d38121276" width="500">
