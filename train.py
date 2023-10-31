@@ -14,6 +14,7 @@ import config
 from model import Generator, Discriminator
 from dataset import UnpairedImageDataset, OneSideImageDataset
 from utils import (
+    apply_seed,
     images_to_grid,
     save_image,
     get_elapsed_time,
@@ -313,6 +314,8 @@ def train_single_step(
 
 
 if __name__ == "__main__":
+    apply_seed(config.SEED)
+
     PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
     CKPTS_DIR = PARENT_DIR/"checkpoints"
