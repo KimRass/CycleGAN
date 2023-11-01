@@ -15,7 +15,7 @@ from model import Generator, Discriminator
 from dataset import UnpairedImageDataset, OneSideImageDataset
 from utils import (
     apply_seed,
-    images_to_grid,
+    image_to_grid,
     save_image,
     get_elapsed_time,
     set_requires_grad,
@@ -193,7 +193,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
     gen_x.eval()
     with torch.no_grad():
         fake_y = gen_x(real_x)
-    forward_grid = images_to_grid(
+    forward_grid = image_to_grid(
         x=real_x,
         y=fake_y,
         x_mean=config.X_MEAN,
@@ -206,7 +206,7 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
     gen_y.eval()
     with torch.no_grad():
         fake_x = gen_y(real_y)
-    backward_grid = images_to_grid(
+    backward_grid = image_to_grid(
         x=real_y,
         y=fake_x,
         x_mean=config.X_MEAN,

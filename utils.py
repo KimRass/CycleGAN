@@ -57,7 +57,7 @@ def _batched_image_to_grid(image, n_cols):
     return grid
 
 
-def images_to_grid(x, y, x_mean, x_std, y_mean, y_std):
+def image_to_grid(x, y, x_mean, x_std, y_mean, y_std):
     x = x.detach().cpu()
     y = y.detach().cpu()
 
@@ -68,7 +68,7 @@ def images_to_grid(x, y, x_mean, x_std, y_mean, y_std):
     gen_image = rearrange(
         torch.cat(images, dim=0), pattern="(n m) c h w -> (m n) c h w", n=len(images),
     )
-    grid = _batched_image_to_grid(gen_image, n_cols=len(images))
+    grid = _batched_image_to_grid(gen_image, n_cols=len(images) * 2)
     return grid
 
 
