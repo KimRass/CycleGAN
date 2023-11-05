@@ -361,6 +361,7 @@ if __name__ == "__main__":
     ### Resume
     DS_NAME_DIR = CKPTS_DIR/args.ds_name
     CKPT_PATH = DS_NAME_DIR/"checkpoint.tar"
+    wandb.run.resumed = True
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])
