@@ -14,7 +14,7 @@ import config
 from model import Generator, Discriminator
 from dataset import UnpairedImageDataset, OneSideImageDataset
 from utils import (
-    apply_seed,
+    set_seed,
     image_to_grid,
     save_image,
     get_elapsed_time,
@@ -314,7 +314,7 @@ def train_single_step(
 
 
 if __name__ == "__main__":
-    apply_seed(config.SEED)
+    set_seed(config.SEED)
 
     PARENT_DIR = Path(__file__).resolve().parent
     SAMPLES_DIR = PARENT_DIR/"samples"
@@ -327,12 +327,10 @@ if __name__ == "__main__":
         args.run_id = wandb.run.name
     wandb.config.update(
         {
-            "SEED": config.SEED,
-            "FIXED_PAIRS": config.FIXED_PAIRS,
+            "seed": config.SEED, "fixed_pairs": config.FIXED_PAIRS, "ds_name": args.ds_name,
         },
         allow_val_change=True,
     )
-    wandb.config.update(args, allow_val_change=True)
     print(wandb.config)
 
     REAL_GT = torch.ones(size=(config.TRAIN_BATCH_SIZE, 1), device=config.DEVICE)
@@ -361,7 +359,6 @@ if __name__ == "__main__":
     ### Resume
     DS_NAME_DIR = CKPTS_DIR/args.ds_name
     CKPT_PATH = DS_NAME_DIR/"checkpoint.tar"
-    wandb.run.resumed = True
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
         disc_x.load_state_dict(state_dict["Dx"])

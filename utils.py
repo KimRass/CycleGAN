@@ -22,7 +22,7 @@ def get_device():
     return device
 
 
-def apply_seed(seed):
+def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
