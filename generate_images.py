@@ -17,8 +17,7 @@ def get_args():
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--x_or_y", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
-    parser.add_argument("--n_cpus", type=int, required=True)
-    parser.add_argument("--batch_size", type=int, required=False, default=1)
+    parser.add_argument("--n_cpus", type=int, required=False, default=0)
 
     args = parser.parse_args()
     return args
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     )
     test_dl = DataLoader(
         test_ds,
-        batch_size=args.batch_size,
+        batch_size=1,
         shuffle=False,
         num_workers=args.n_cpus,
         pin_memory=False,
@@ -80,5 +79,6 @@ if __name__ == "__main__":
             x_std=config.X_STD,
             y_mean=config.Y_MEAN,
             y_std=config.Y_STD,
+            n_cols=2,
         )
         save_image(grid, path=f"{PARENT_DIR}/generated_images/{DIR_NAME}/{idx}.jpg")

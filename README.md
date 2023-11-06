@@ -10,16 +10,17 @@ python3 generate_images.py\
     --data_dir=".../monet2photo/"\
     --x_or_y="x"\
     --ckpt_path=".../monet_to_photo.pth"\
-    --n_cpus=1\
-    --batch_size=4
+    --n_cpus=0 # Optional
 ```
 ## Pre-trained Models and Generated Images
 |  | Pre-trained model | Generated images on test set |
 | - | - | - |
-| Monet to Photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/17FMHYrDzmaC2fQHcBxxjbS758ifKBiHX/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
-| Photo to monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1TW8eOKYU3b_6GlhV2Z1FIDZMGjSbh3lW/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
+| Monet to photo | [cyclegan_monet_to_photo.pth](https://drive.google.com/file/d/17FMHYrDzmaC2fQHcBxxjbS758ifKBiHX/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/monet_to_photo |
+| Photo to Monet | [cyclegan_photo_to_monet.pth](https://drive.google.com/file/d/1TW8eOKYU3b_6GlhV2Z1FIDZMGjSbh3lW/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_monet |
 | Vangogh to photo | [cyclegan_vangogh_to_photo.pth](https://drive.google.com/file/d/1tIktlGXTwPZGb-Zu7y-MSWWO304FivaB/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/vangogh_to_photo |
-| Photo to vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
+| Photo to Vangogh | [cyclegan_photo_to_vangogh.pth](https://drive.google.com/file/d/1lIJ5eGpCjGvMOcg93-Vnoqy-2y56JXtT/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_vangogh |
+| Cezanne to photo | [cyclegan_cezanne_to_photo.pth](https://drive.google.com/file/d/1ndKKMMXycJ3KPzWzOUtCrq8lFNlddy3h/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/cezanne_to_photo |
+| Photo to Cezanne | [cyclegan_photo_to_cezanne.pth](https://drive.google.com/file/d/1Gz2rK0dSbxU4xgVc7PXueZYsAdVZkCs4/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_cezanne |
 | Ukiyo-e to photo | [cyclegan_ukiyoe_to_photo.pth](https://drive.google.com/file/d/1BDuSDpdwtOyFSGyNLHSGFZlYIG9ZFRjQ/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/ukiyoe_to_photo |
 | Photo to ukiyo-e | [cyclegan_photo_to_ukiyoe.pth](https://drive.google.com/file/d/1fz-l2B0aSWGeF7GcXBH6Rps6TDdXLEzo/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/photo_to_ukiyoe |
 | Horse to zebra | [cyclegan_horse_to_zebra.pth](https://drive.google.com/file/d/1dXuPvCiuIBPB63-bmoxX7kMi819HaECh/view?usp=sharing) | https://github.com/KimRass/CycleGAN/tree/main/generated_images/horse_to_zebra |
@@ -39,7 +40,16 @@ python3 generate_images.py\
 ### Photo to Vangogh
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/5b25f493-fe90-4ca9-8bf0-b605bd109644" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/b258bfd9-17d9-4042-a4c2-2d5ce9ce6b15" width="500">
+### Cezanne to Photo
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/bb670df1-bb5a-4c82-9cce-be177f1a117e" width="500">
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/8d795340-805e-4ba0-9134-94dd7b818f60" width="500">
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/42d1e1cb-7976-4aaa-a9ba-c78a72ba3b59" width="500">
+### Photo to Cezanne
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/10b94202-d540-4df5-8d53-866222c14909" width="500">
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/a414b384-b150-4570-90d4-4209ab75972a" width="500">
 ### Ukiyoe to Photo
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/94157d1e-816e-4b6b-93bb-b6a6e2fa88e1" width="500">
+- <img src="https://github.com/KimRass/CycleGAN/assets/105417680/9b0e7490-224d-4866-86a3-f074998e2e6b" width="500">
 ### Photo to Ukiyoe
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/9ec58775-01ce-438f-8c74-1304f84b62c4" width="500">
 - <img src="https://github.com/KimRass/CycleGAN/assets/67457712/8a65401f-3d59-4e9f-91b8-f3b8060c511a" width="500">
