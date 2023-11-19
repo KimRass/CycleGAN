@@ -1,9 +1,6 @@
 # References:
     # https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/networks.py
 
-# 논문과 읽어서는 어려운 부분이 많고 논문과 공식 repository가 서로 다른 부분 또한 많은데, 공식 repository를 기준으로
-# 구현했습니다.
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
