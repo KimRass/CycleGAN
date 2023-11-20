@@ -28,8 +28,6 @@ class ConvNormRelu(nn.Module):
         x = self.norm(x)
         if self.activ == "relu":
             x = torch.relu(x)
-        elif self.activ == "none":
-            pass
         return x
 
 
