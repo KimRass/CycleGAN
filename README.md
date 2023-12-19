@@ -1,6 +1,6 @@
 # 'CycleGAN' (Zhu et al., 2017) implementation from scratch in PyTorch
 ## Paper Reading
-- [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/unpaired_image_to_image_translation_using_cycle_consistent_adversarial_networks.pdf)
+- [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/papers/unpaired_image_to_image_translation_using_cycle_consistent_adversarial_networks.pdf)
 ## How to Use
 ### Image Generation
 ```bash
@@ -98,6 +98,8 @@ python3 generate_images.py\
         x_path = random.choice(self.x_paths)
     ```
 ### LSGANs
-- 논문에 따르면 objective로서 'negative log likelihood' (`GAN_CRIT = nn.BCEWithLogitsLoss()`) 대신에 'least-squares' (`GAN_CRIT = nn.MSELoss()`)를 사용합니다. (Ref: [Least Squares Generative Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/least_squares_generative_adversarial_networks.pdf)) 전자를 사용할 경우 금방 mode collapse가 발생하는 것을 관찰할 수 있었습니다.
+- 논문에 따르면 objective로서 'negative log likelihood' (`GAN_CRIT = nn.BCEWithLogitsLoss()`) 대신에 'least-squares' (`GAN_CRIT = nn.MSELoss()`)를 사용합니다. [1] 전자를 사용할 경우 금방 mode collapse가 발생하는 것을 관찰할 수 있었습니다.
 ## Gatys et al. (2016)
 - Please refer to my another repository [Gatys et al.](https://github.com/KimRass/Gatys-et-al.)
+## References
+- [1] [Least Squares Generative Adversarial Networks](https://github.com/KimRass/CycleGAN/blob/main/papers/least_squares_generative_adversarial_networks.pdf)
