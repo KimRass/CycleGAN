@@ -7,7 +7,7 @@ import argparse
 import config
 from utils import image_to_grid, save_image, _modify_state_dict
 from model import Generator
-from dataset import OneSideImageDataset
+from data import OneSideImageDataset
 
 
 def get_args():
@@ -46,10 +46,10 @@ if __name__ == "__main__":
 
     DIR_NAME = get_dir_name(ds_name=args.ds_name, x_or_y=args.x_or_y)
 
-    gen = Generator().to(config.DEVICE)
+    G = Generator().to(config.DEVICE)
     state_dict = torch.load(args.ckpt_path, map_location=config.DEVICE)
     state_dict = _modify_state_dict(state_dict)
-    gen.load_state_dict(state_dict)
+    G.load_state_dict(state_dict)
 
     test_ds = OneSideImageDataset(
         data_dir=args.data_dir,
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     )
 
     # ### Generate images
-    gen.eval()
+    G.eval()
     for idx, real in enumerate(tqdm(test_dl), start=1):
         with torch.no_grad():
-            fake = gen(real)
+            fake = G(real)
         grid = image_to_grid(
             x=real,
             y=fake,

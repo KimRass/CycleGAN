@@ -12,7 +12,7 @@ import wandb
 
 import config
 from model import Generator, Discriminator
-from dataset import UnpairedImageDataset, OneSideImageDataset
+from data import UnpairedImageDataset, OneSideImageDataset
 from utils import (
     set_seed,
     image_to_grid,
@@ -91,82 +91,82 @@ def get_dls(data_dir, train_batch_size, test_batch_size, n_cpus, fixed_pairs):
 
 
 def get_models(device):
-    disc_x = Discriminator().to(device)
-    disc_y = Discriminator().to(device)
-    gen_x = Generator().to(device)
-    gen_y = Generator().to(device)
+    Dx = Discriminator().to(device)
+    Dy = Discriminator().to(device)
+    Gx = Generator().to(device)
+    Gy = Generator().to(device)
 
-    disc_x = torch.compile(disc_x)
-    disc_y = torch.compile(disc_y)
-    gen_x = torch.compile(gen_x)
-    gen_y = torch.compile(gen_y)
-    return disc_x, disc_y, gen_x, gen_y
+    Dx = torch.compile(Dx)
+    Dy = torch.compile(Dy)
+    Gx = torch.compile(Gx)
+    Gy = torch.compile(Gy)
+    return Dx, Dy, Gx, Gy
 
 
-def get_optims(disc_x, disc_y, gen_x, gen_y):
+def get_optims(Dx, Dy, Gx, Gy):
     # "We use the Adam solver."
     # 논문에는 learning rate에 관한 얘기만 나오지만 공식 저장소를 그대로 따라 `betas=(0.5, 0.999)`를 설정했습니다. 
-    disc_optim = Adam(
-        list(disc_x.parameters()) + list(disc_y.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
+    D_optim = Adam(
+        list(Dx.parameters()) + list(Dy.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
     )
-    gen_optim = Adam(
-        list(gen_x.parameters()) + list(gen_y.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
+    G_optim = Adam(
+        list(Gx.parameters()) + list(Gy.parameters()), lr=config.LR, betas=(config.BETA1, config.BETA2),
     )
-    return disc_optim, gen_optim
+    return D_optim, G_optim
 
 
-def get_gen_losses(disc_x, disc_y, gen_x, gen_y, real_x, real_y, real_gt):
+def get_G_losses(Dx, Dy, Gx, Gy, real_x, real_y, real_gt):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-        fake_y = gen_x(real_x)
-        fake_y_pred = disc_y(fake_y)
-        gen_x_gan_loss = config.GAN_CRIT(fake_y_pred, real_gt)
+        fake_y = Gx(real_x)
+        fake_y_pred = Dy(fake_y)
+        Gx_gan_loss = config.GAN_CRIT(fake_y_pred, real_gt)
 
-        fake_x = gen_y(real_y)
-        fake_x_pred = disc_x(fake_x)
-        gen_y_gan_loss = config.GAN_CRIT(fake_x_pred, real_gt)
+        fake_x = Gy(real_y)
+        fake_x_pred = Dx(fake_x)
+        Gy_gan_loss = config.GAN_CRIT(fake_x_pred, real_gt)
 
-        gen_x_id_loss = config.ID_CRIT(gen_x(real_y), real_y)
-        gen_y_id_loss = config.ID_CRIT(gen_y(real_x), real_x)
+        Gx_id_loss = config.ID_CRIT(Gx(real_y), real_y)
+        Gy_id_loss = config.ID_CRIT(Gy(real_x), real_x)
 
-        fake_fake_x = gen_y(fake_y)
+        fake_fake_x = Gy(fake_y)
         forward_cycle_loss = config.CYCLE_CRIT(fake_fake_x, real_x)
 
-        fake_fake_y = gen_x(fake_x)
+        fake_fake_y = Gx(fake_x)
         backward_cycle_loss = config.CYCLE_CRIT(fake_fake_y, real_y)
     return (
         fake_x,
         fake_y,
-        gen_x_gan_loss,
-        gen_y_gan_loss,
-        gen_x_id_loss,
-        gen_y_id_loss,
+        Gx_gan_loss,
+        Gy_gan_loss,
+        Gx_id_loss,
+        Gy_id_loss,
         forward_cycle_loss,
         backward_cycle_loss,
     )
 
 
-def get_disc_losses(
-    disc_x, disc_y, real_x, real_y, real_gt, fake_gt, fake_x, fake_y, x_img_buffer, y_img_buffer,
+def get_D_losses(
+    Dx, Dy, real_x, real_y, real_gt, fake_gt, fake_x, fake_y, x_img_buffer, y_img_buffer,
 ):
     with torch.autocast(device_type=config.DEVICE.type, dtype=torch.float16, enabled=True):
-        real_y_pred = disc_y(real_y)
-        real_disc_y_loss = config.GAN_CRIT(real_y_pred, real_gt)
+        real_y_pred = Dy(real_y)
+        real_Dy_loss = config.GAN_CRIT(real_y_pred, real_gt)
         past_fake_y = y_img_buffer(fake_y)
-        fake_y_pred = disc_y(past_fake_y.detach())
-        fake_disc_y_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
+        fake_y_pred = Dy(past_fake_y.detach())
+        fake_Dy_loss = config.GAN_CRIT(fake_y_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
         # relative to the rate of G."
-        disc_y_loss = (real_disc_y_loss + fake_disc_y_loss) / 2
+        Dy_loss = (real_Dy_loss + fake_Dy_loss) / 2
 
-        real_x_pred = disc_x(real_x)
-        real_disc_x_loss = config.GAN_CRIT(real_x_pred, real_gt)
+        real_x_pred = Dx(real_x)
+        real_Dx_loss = config.GAN_CRIT(real_x_pred, real_gt)
         past_fake_x = x_img_buffer(fake_x)
-        fake_x_pred = disc_x(past_fake_x.detach())
-        fake_disc_x_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
+        fake_x_pred = Dx(past_fake_x.detach())
+        fake_Dx_loss = config.GAN_CRIT(fake_x_pred, fake_gt)
         # "We divide the objective by 2 while optimizing D, which slows down the rate at which D learns,
         # relative to the rate of G."
-        disc_x_loss = (real_disc_x_loss + fake_disc_x_loss) / 2
-    return disc_y_loss, disc_x_loss
+        Dx_loss = (real_Dx_loss + fake_Dx_loss) / 2
+    return Dy_loss, Dx_loss
 
 
 def _get_lr(epoch):
@@ -180,19 +180,19 @@ def _get_lr(epoch):
 
 
 def update_lrs(
-    disc_optim,
-    gen_optim,
+    D_optim,
+    G_optim,
     epoch,
 ):
     lr = _get_lr(epoch)
-    disc_optim.param_groups[0]["lr"] = lr
-    gen_optim.param_groups[0]["lr"] = lr
+    D_optim.param_groups[0]["lr"] = lr
+    G_optim.param_groups[0]["lr"] = lr
 
 
-def generate_samples(gen_x, gen_y, real_x, real_y):
-    gen_x.eval()
+def generate_samples(Gx, Gy, real_x, real_y):
+    Gx.eval()
     with torch.no_grad():
-        fake_y = gen_x(real_x)
+        fake_y = Gx(real_x)
     forward_grid = image_to_grid(
         x=real_x,
         y=fake_y,
@@ -201,11 +201,11 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
         y_mean=config.Y_MEAN,
         y_std=config.Y_STD,
     )
-    gen_x.train()
+    Gx.train()
 
-    gen_y.eval()
+    Gy.eval()
     with torch.no_grad():
-        fake_x = gen_y(real_y)
+        fake_x = Gy(real_y)
     backward_grid = image_to_grid(
         x=real_y,
         y=fake_x,
@@ -214,28 +214,28 @@ def generate_samples(gen_x, gen_y, real_x, real_y):
         y_mean=config.Y_MEAN,
         y_std=config.Y_STD,
     )
-    gen_y.train()
+    Gy.train()
     return forward_grid, backward_grid
 
 
-def save_gen(gen, save_path):
+def save_G(G, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    state_dict = _modify_state_dict(gen.state_dict())
+    state_dict = _modify_state_dict(G.state_dict())
     torch.save(state_dict, str(save_path))
 
 
 def save_checkpoint(
-    epoch, disc_x, disc_y, gen_x, gen_y, disc_optim, gen_optim, scaler, x_img_buffer, y_img_buffer, save_path,
+    epoch, Dx, Dy, Gx, Gy, D_optim, G_optim, scaler, x_img_buffer, y_img_buffer, save_path,
 ):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
         "epoch": epoch,
-        "Dx": disc_x.state_dict(),
-        "Dy": disc_y.state_dict(),
-        "Gx": gen_x.state_dict(),
-        "Gy": gen_y.state_dict(),
-        "D_optimizer": disc_optim.state_dict(),
-        "G_optimizer": gen_optim.state_dict(),
+        "Dx": Dx.state_dict(),
+        "Dy": Dy.state_dict(),
+        "Gx": Gx.state_dict(),
+        "Gy": Gy.state_dict(),
+        "D_optimizer": D_optim.state_dict(),
+        "G_optimizer": G_optim.state_dict(),
         "scaler": scaler.state_dict(),
         "stored_x_images": x_img_buffer.stored_images,
         "stored_y_images": y_img_buffer.stored_images,
@@ -245,7 +245,7 @@ def save_checkpoint(
 
 
 def train_single_step(
-    real_x, real_y, real_gt, fake_gt, disc_x, disc_y, gen_x, gen_y, gen_optim, disc_optim, scaler,
+    real_x, real_y, real_gt, fake_gt, Dx, Dy, Gx, Gy, G_optim, D_optim, scaler,
 ):
     real_x = real_x.to(config.DEVICE)
     real_y = real_y.to(config.DEVICE)
@@ -254,37 +254,37 @@ def train_single_step(
     (
         fake_x,
         fake_y,
-        gen_x_gan_loss,
-        gen_y_gan_loss,
-        gen_x_id_loss,
-        gen_y_id_loss,
+        Gx_gan_loss,
+        Gy_gan_loss,
+        Gx_id_loss,
+        Gy_id_loss,
         forward_cycle_loss,
         backward_cycle_loss,
-    ) = get_gen_losses(
-        disc_x=disc_x,
-        disc_y=disc_y,
-        gen_x=gen_x,
-        gen_y=gen_y,
+    ) = get_G_losses(
+        Dx=Dx,
+        Dy=Dy,
+        Gx=Gx,
+        Gy=Gy,
         real_x=real_x,
         real_y=real_y,
         real_gt=real_gt,
     )
-    gen_loss = gen_x_gan_loss + gen_y_gan_loss
-    gen_loss += config.ID_LAMB * (gen_x_id_loss + gen_y_id_loss)
-    gen_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
+    G_loss = Gx_gan_loss + Gy_gan_loss
+    G_loss += config.ID_LAMB * (Gx_id_loss + Gy_id_loss)
+    G_loss += config.CYCLE_LAMB * (forward_cycle_loss +  backward_cycle_loss)
 
-    set_requires_grad(models=[disc_x, disc_y], grad=False) # Freeze Ds
+    set_requires_grad(models=[Dx, Dy], grad=False) # Freeze Ds
 
-    gen_optim.zero_grad()
-    scaler.scale(gen_loss).backward()
-    scaler.step(gen_optim)
+    G_optim.zero_grad()
+    scaler.scale(G_loss).backward()
+    scaler.step(G_optim)
 
-    set_requires_grad(models=[disc_x, disc_y], grad=True)
+    set_requires_grad(models=[Dx, Dy], grad=True)
 
     ### Train Dx and Dy.
-    disc_y_loss, disc_x_loss = get_disc_losses(
-        disc_x=disc_x,
-        disc_y=disc_y,
+    Dy_loss, Dx_loss = get_D_losses(
+        Dx=Dx,
+        Dy=Dy,
         real_x=real_x,
         real_y=real_y,
         real_gt=real_gt,
@@ -295,21 +295,21 @@ def train_single_step(
         y_img_buffer=y_img_buffer,
     )
 
-    disc_optim.zero_grad()
-    scaler.scale(disc_y_loss).backward()
-    scaler.scale(disc_x_loss).backward()
-    scaler.step(disc_optim)
+    D_optim.zero_grad()
+    scaler.scale(Dy_loss).backward()
+    scaler.scale(Dx_loss).backward()
+    scaler.step(D_optim)
 
     scaler.update()
     return (
-        gen_x_gan_loss,
-        gen_y_gan_loss,
-        gen_x_id_loss,
-        gen_y_id_loss,
+        Gx_gan_loss,
+        Gy_gan_loss,
+        Gx_id_loss,
+        Gy_id_loss,
         forward_cycle_loss,
         backward_cycle_loss,
-        disc_y_loss,
-        disc_x_loss,
+        Dy_loss,
+        Dx_loss,
     )
 
 
@@ -346,9 +346,9 @@ if __name__ == "__main__":
     TEST_REAL_X = next(iter(x_test_dl)).to(config.DEVICE)
     TEST_REAL_Y = next(iter(y_test_dl)).to(config.DEVICE)
 
-    disc_x, disc_y, gen_x, gen_y = get_models(device=config.DEVICE)
+    Dx, Dy, Gx, Gy = get_models(device=config.DEVICE)
 
-    disc_optim, gen_optim = get_optims(disc_x=disc_x, disc_y=disc_y, gen_x=gen_x, gen_y=gen_y)
+    D_optim, G_optim = get_optims(Dx=Dx, Dy=Dy, Gx=Gx, Gy=Gy)
 
     scaler = GradScaler()
 
@@ -361,12 +361,12 @@ if __name__ == "__main__":
     CKPT_PATH = DS_NAME_DIR/"checkpoint.tar"
     if wandb.run.resumed:
         state_dict = torch.load(str(CKPT_PATH), map_location=config.DEVICE)
-        disc_x.load_state_dict(state_dict["Dx"])
-        disc_y.load_state_dict(state_dict["Dy"])
-        gen_x.load_state_dict(state_dict["Gx"])
-        gen_y.load_state_dict(state_dict["Gy"])
-        disc_optim.load_state_dict(state_dict["D_optimizer"])
-        gen_optim.load_state_dict(state_dict["G_optimizer"])
+        Dx.load_state_dict(state_dict["Dx"])
+        Dy.load_state_dict(state_dict["Dy"])
+        Gx.load_state_dict(state_dict["Gx"])
+        Gy.load_state_dict(state_dict["Gy"])
+        D_optim.load_state_dict(state_dict["D_optimizer"])
+        G_optim.load_state_dict(state_dict["G_optimizer"])
         scaler.load_state_dict(state_dict["scaler"])
         init_epoch = state_dict["epoch"]
         x_img_buffer.stored_images = state_dict["stored_x_images"]
@@ -377,83 +377,83 @@ if __name__ == "__main__":
 
     for epoch in range(init_epoch + 1, config.N_EPOCHS + 1):
         update_lrs(
-            disc_optim=disc_optim,
-            gen_optim=gen_optim,
+            D_optim=D_optim,
+            G_optim=G_optim,
             epoch=epoch,
         )
 
-        accum_disc_y_loss = 0
-        accum_disc_x_loss = 0
-        accum_gen_x_gan_loss = 0
-        accum_gen_y_gan_loss = 0
-        accum_gen_x_id_loss = 0
-        accum_gen_y_id_loss = 0
+        accum_Dy_loss = 0
+        accum_Dx_loss = 0
+        accum_Gx_gan_loss = 0
+        accum_Gy_gan_loss = 0
+        accum_Gx_id_loss = 0
+        accum_Gy_id_loss = 0
         accum_forward_cycle_loss = 0
         accum_backward_cycle_loss = 0
 
         start_time = time()
         for step, (real_x, real_y) in enumerate(train_dl, start=1):
             (
-                gen_x_gan_loss,
-                gen_y_gan_loss,
-                gen_x_id_loss,
-                gen_y_id_loss,
+                Gx_gan_loss,
+                Gy_gan_loss,
+                Gx_id_loss,
+                Gy_id_loss,
                 forward_cycle_loss,
                 backward_cycle_loss,
-                disc_y_loss,
-                disc_x_loss,
+                Dy_loss,
+                Dx_loss,
             ) = train_single_step(
                 real_x=real_x,
                 real_y=real_y,
                 real_gt=REAL_GT,
                 fake_gt=FAKE_GT,
-                disc_x=disc_x,
-                disc_y=disc_y,
-                gen_x=gen_x,
-                gen_y=gen_y,
-                gen_optim=gen_optim,
-                disc_optim=disc_optim,
+                Dx=Dx,
+                Dy=Dy,
+                Gx=Gx,
+                Gy=Gy,
+                G_optim=G_optim,
+                D_optim=D_optim,
                 scaler=scaler,
             )
-            accum_gen_x_gan_loss += gen_x_gan_loss.item()
-            accum_gen_y_gan_loss += gen_y_gan_loss.item()
-            accum_gen_x_id_loss += gen_x_id_loss.item()
-            accum_gen_y_id_loss += gen_y_id_loss.item()
+            accum_Gx_gan_loss += Gx_gan_loss.item()
+            accum_Gy_gan_loss += Gy_gan_loss.item()
+            accum_Gx_id_loss += Gx_id_loss.item()
+            accum_Gy_id_loss += Gy_id_loss.item()
             accum_forward_cycle_loss += forward_cycle_loss.item()
             accum_backward_cycle_loss += backward_cycle_loss.item()
-            accum_disc_y_loss += disc_y_loss.item()
-            accum_disc_x_loss += disc_x_loss.item()
+            accum_Dy_loss += Dy_loss.item()
+            accum_Dx_loss += Dx_loss.item()
 
-        accum_gen_x_gan_loss /= len(train_dl)
-        accum_gen_y_gan_loss /= len(train_dl)
-        accum_gen_x_id_loss /= len(train_dl)
-        accum_gen_y_id_loss /= len(train_dl)
+        accum_Gx_gan_loss /= len(train_dl)
+        accum_Gy_gan_loss /= len(train_dl)
+        accum_Gx_id_loss /= len(train_dl)
+        accum_Gy_id_loss /= len(train_dl)
         accum_forward_cycle_loss /= len(train_dl)
         accum_backward_cycle_loss /= len(train_dl)
-        accum_disc_y_loss /= len(train_dl)
-        accum_disc_x_loss /= len(train_dl)
+        accum_Dy_loss /= len(train_dl)
+        accum_Dx_loss /= len(train_dl)
 
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"[ {epoch}/{config.N_EPOCHS} ]"
-        msg += f"[ Dy: {accum_disc_y_loss:.3f} ]"
-        msg += f"[ Dx: {accum_disc_x_loss:.3f} ]"
-        msg += f"[ Gx GAN: {accum_gen_x_gan_loss:.3f} ]"
-        msg += f"[ Gy GAN: {accum_gen_y_gan_loss:.3f} ]"
-        msg += f"[ Gx id: {accum_gen_x_id_loss:.3f} ]"
-        msg += f"[ Gy id: {accum_gen_y_id_loss:.3f} ]"
+        msg += f"[ Dy: {accum_Dy_loss:.3f} ]"
+        msg += f"[ Dx: {accum_Dx_loss:.3f} ]"
+        msg += f"[ Gx GAN: {accum_Gx_gan_loss:.3f} ]"
+        msg += f"[ Gy GAN: {accum_Gy_gan_loss:.3f} ]"
+        msg += f"[ Gx id: {accum_Gx_id_loss:.3f} ]"
+        msg += f"[ Gy id: {accum_Gy_id_loss:.3f} ]"
         msg += f"[ Forward cycle: {accum_forward_cycle_loss:.3f} ]"
         msg += f"[ Backward cycle: {accum_backward_cycle_loss:.3f} ]"
         print(msg)
 
         wandb.log(
             {
-                "Learning rate": disc_optim.param_groups[0]["lr"],
-                "Dy loss": accum_disc_y_loss,
-                "Dx loss": accum_disc_x_loss,
-                "Gx GAN loss": accum_gen_x_gan_loss,
-                "Gy GAN loss": accum_gen_y_gan_loss,
-                "Gx identity loss": accum_gen_x_id_loss,
-                "Gy identity loss": accum_gen_y_id_loss,
+                "Learning rate": D_optim.param_groups[0]["lr"],
+                "Dy loss": accum_Dy_loss,
+                "Dx loss": accum_Dx_loss,
+                "Gx GAN loss": accum_Gx_gan_loss,
+                "Gy GAN loss": accum_Gy_gan_loss,
+                "Gx identity loss": accum_Gx_id_loss,
+                "Gy identity loss": accum_Gy_id_loss,
                 "Forward cycle loss": accum_forward_cycle_loss,
                 "Backward cycle loss": accum_backward_cycle_loss,
             },
@@ -463,7 +463,7 @@ if __name__ == "__main__":
         ### Generate samples.
         if epoch % config.GEN_SAMPLES_EVERY == 0:
             forward_grid, backward_grid = generate_samples(
-                gen_x=gen_x, gen_y=gen_y, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
+                Gx=Gx, Gy=Gy, real_x=TEST_REAL_X, real_y=TEST_REAL_Y,
             )
             forward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/forward_epoch_{epoch}.jpg"
             backward_save_path = f"{SAMPLES_DIR}/{args.ds_name}/backward_epoch_{epoch}.jpg"
@@ -479,17 +479,17 @@ if __name__ == "__main__":
 
         ### Save checkpoint.
         if epoch % config.SAVE_GENS_EVERY == 0:
-            save_gen(gen=gen_x, save_path=DS_NAME_DIR/f"Gx_epoch_{epoch}.pth")
-            save_gen(gen=gen_y, save_path=DS_NAME_DIR/f"Gy_epoch_{epoch}.pth")
+            save_G(G=Gx, save_path=DS_NAME_DIR/f"Gx_epoch_{epoch}.pth")
+            save_G(G=Gy, save_path=DS_NAME_DIR/f"Gy_epoch_{epoch}.pth")
 
         save_checkpoint(
             epoch=epoch,
-            disc_x=disc_x,
-            disc_y=disc_y,
-            gen_x=gen_x,
-            gen_y=gen_y,
-            disc_optim=disc_optim,
-            gen_optim=gen_optim,
+            Dx=Dx,
+            Dy=Dy,
+            Gx=Gx,
+            Gy=Gy,
+            D_optim=D_optim,
+            G_optim=G_optim,
             scaler=scaler,
             x_img_buffer=x_img_buffer,
             y_img_buffer=y_img_buffer,
